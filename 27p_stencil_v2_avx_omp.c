@@ -168,40 +168,14 @@ void bc_matvec_omp_v1(const BlockedCSR * restrict A, const double * restrict x, 
     }
 }
 
-void bc_matvec_omp_v2(const BlockedCSR *restrict A, const double *restrict x, double *restrict y) {
-    int bs = A->bs;
-
-    for (int brow = 0; brow < A->nb; brow++) {
-        int row_start = A->ia[brow];
-        int row_end   = A->ia[brow + 1];
-        double *yrow  = &y[(size_t)brow * bs];
-
-        double acc[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        double y2ex   = 0.0;
-
-        for (int p = row_start; p < row_end; p++) {
-            const double *blk  = &A->vals[(size_t)p * 9];
-            const double *xcol = &x[(size_t)A->ja[p] * bs];
-
-            #pragma omp simd
-            for (int i = 0; i < bs *; i++)
-                acc[i] += blk[i] * xcol[i % bs];
-
-            y2ex += blk[8] * xcol[2];
-        }
-
-        yrow[0] = acc[0] + acc[1] + acc[2];
-        yrow[1] = acc[3] + acc[4] + acc[5];
-        yrow[2] = acc[6] + acc[7] + y2ex;
-    }
-}
-
-void bc_matvec_omp_v3(const BlockedCSR * restrict A, const double * restrict x, double * restrict y) {
+void bc_matvec_omp_v2(const BlockedCSR * restrict A, const double * restrict x, double * restrict y) {
     int bs        = A->bs;
     int total_len = A->nb * bs;
 
     #pragma omp simd
-    for (int i = 0; i < total_len; i++) y[i] = 0.0;
+    for (int i = 0; i < total_len; i++) {
+        y[i] = 0.0;
+    }
 
     for (int brow = 0; brow < A->nb; brow++) {
         int row_start = A->ia[brow];
@@ -214,40 +188,9 @@ void bc_matvec_omp_v3(const BlockedCSR * restrict A, const double * restrict x, 
             const double *blk  = &A->vals[p * bs * bs];
             const double *xcol = &x[bcol * bs];
 
-            for (int i = 0; i < 3; i++) {
-                yrow[0] += blk[i] * xcol[i];
-                yrow[1] += blk[3 + i] * xcol[i];
-                yrow[2] += blk[6 + i] * xcol[i];
-            }
+           
+            
         }
-    }
-}
-
-void bc_matvec_omp_v4(const BlockedCSR *restrict A, const double *restrict x, double *restrict y) {
-    int bs = A->bs;
-
-    for (int brow = 0; brow < A->nb; brow++) {
-        int row_start = A->ia[brow];
-        int row_end   = A->ia[brow + 1];
-        double *yrow  = &y[(size_t)brow * bs];
-
-        double acc[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        double y2ex   = 0.0;
-
-        for (int p = row_start; p < row_end; p++) {
-            const double *blk  = &A->vals[(size_t)p * 9];
-            const double *xcol = &x[(size_t)A->ja[p] * bs];
-
-            #pragma omp simd
-            for (int i = 0; i < bs *; i++)
-                acc[i] += blk[i] * xcol[i % bs];
-
-            y2ex += blk[8] * xcol[2];
-        }
-
-        yrow[0] = acc[0] + acc[1] + acc[2];
-        yrow[1] = acc[3] + acc[4] + acc[5];
-        yrow[2] = acc[6] + acc[7] + y2ex;
     }
 }
 
@@ -356,11 +299,25 @@ void bc_matvec_avx512(const BlockedCSR * restrict A, const double * restrict x, 
     }
 }
 
+static int cmp_double(const void *a, const void *b) {
+    double da = *(const double *)a, db = *(const double *)b;
+    return (da > db) - (da < db);
+}
+
+static double median(double *arr, int n) {
+    double *tmp = malloc(n * sizeof(double));
+    memcpy(tmp, arr, n * sizeof(double));
+    qsort(tmp, n, sizeof(double), cmp_double);
+    double m = (n % 2 == 0) ? (tmp[n/2-1] + tmp[n/2]) / 2.0 : tmp[n/2];
+    free(tmp);
+    return m;
+}
+
 void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
     int N = nx * ny * nz;
-    
+
     printf("=============================================================\n");
-    printf("Avaliação: malha %dx%dx%d (N=%d, 3N=%d), K=%d iterações\n", 
+    printf("Avaliação: malha %dx%dx%d (N=%d, 3N=%d), K=%d iterações\n",
            nx, ny, nz, N, 3*N, K);
     printf("=============================================================\n");
 
@@ -370,42 +327,36 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
     double *y_ref  = malloc((size_t)3 * N * sizeof(double));
     double *y_test = malloc((size_t)3 * N * sizeof(double));
 
-    for (int i = 0; i < 3 * N; i++) {
-        x[i] = (double)i;
-    }
+    for (int i = 0; i < 3 * N; i++) x[i] = (double)i;
 
-    // Variantes para testar
     struct MatvecVariant variants[] = {
-        {"Escalar",     bc_matvec},
-        {"AVX256",      bc_matvec_avx256},
-        {"AVX512",      bc_matvec_avx512},
-        {"OpenMP_v1",   bc_matvec_omp_v1},
-        {"OpenMP_v2",   bc_matvec_omp_v2},
-        {"OpenMP_v3",   bc_matvec_omp_v3},
-        {"OpenMP_v4",   bc_matvec_omp_v4}
+        {"Escalar",   bc_matvec},
+        {"AVX256",    bc_matvec_avx256},
+        {"AVX512",    bc_matvec_avx512},
+        {"OpenMP_v1", bc_matvec_omp_v1},
+        {"OpenMP_v2", bc_matvec_omp_v2},
     };
     int num_variants = sizeof(variants) / sizeof(variants[0]);
 
-    // Referência (escalar)
-    bc_matvec(A, x, y_ref);
+    bc_matvec(A, x, y_ref); // obter y_ref para comparação
 
-    double *times  = malloc(num_variants * sizeof(double));
-    double *errors = malloc(num_variants * sizeof(double));
+    double *sample = malloc(K * sizeof(double));  // tempos individuais
+    double  means[num_variants], medians[num_variants], errors[num_variants];
 
-    // Avalia cada variante
     for (int v = 0; v < num_variants; v++) {
-        // Warmup
-        variants[v].func(A, x, y_test);
+        variants[v].func(A, x, y_test);  // warmup, para evitar medir overheads de cache misses iniciais
 
-        // Benchmark
-        double t0 = wtime();
+        // Coleta K amostras
+        double sum = 0.0;
         for (int k = 0; k < K; k++) {
+            double t0 = wtime();
             variants[v].func(A, x, y_test);
+            sample[k] = wtime() - t0;
+            sum += sample[k];
         }
-        double t1 = wtime();
-        times[v] = (t1 - t0) / K;
+        means[v]   = sum / K;
+        medians[v] = median(sample, K);
 
-        // Erro relativo máximo
         double max_err = 0.0;
         for (int i = 0; i < 3 * N; i++) {
             double diff = fabs(y_ref[i] - y_test[i]) / fabs(y_ref[i]);
@@ -414,24 +365,22 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
         errors[v] = max_err;
     }
 
-    // Resultados
-    double time_ref = times[0];
+    double mean_ref   = means[0];
+    double median_ref = medians[0];
 
-    printf("%-12s %12s %10s %12s\n", "Variante", "Tempo (s)", "Speedup", "Erro Max");
-    printf("-----------------------------------------------------\n");
-
+    printf("%-12s %12s %9s %12s %9s %12s\n",
+           "Variante", "Media(s)", "Speedup", "Mediana(s)", "Speedup", "Erro Max");
+    printf("--------------------------------------------------------------------------\n");
     for (int v = 0; v < num_variants; v++) {
-        printf("%-12s %12.6f %9.2fx %12.2e\n",
+        printf("%-12s %12.6f %8.2fx %12.6f %8.2fx %12.2e\n",
                variants[v].name,
-               times[v],
-               time_ref / times[v],
+               means[v],   mean_ref   / means[v],
+               medians[v], median_ref / medians[v],
                errors[v]);
     }
-
     printf("\n");
 
-    free(times);
-    free(errors);
+    free(sample);
     free(x);
     free(y_ref);
     free(y_test);
