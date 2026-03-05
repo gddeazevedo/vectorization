@@ -23,9 +23,10 @@ struct MatvecVariant {
 };
 
 
-int num_variants = 5;
-double gs_mean[5]   = {0};
-double gs_median[5] = {0};
+#define num_variants 6
+
+double gs_mean[num_variants]   = {0};
+double gs_median[num_variants] = {0};
 int    gs_count     = 0;
 
 static inline double wtime() {
@@ -147,8 +148,9 @@ void bc_matvec_omp_v1(const BlockedCSR * restrict A, const double * restrict x, 
     int bs        = A->bs;
     int total_len = A->nb * bs;
 
-    #pragma omp simd
-    for (int i = 0; i < total_len; i++) y[i] = 0.0;
+    for (int i = 0; i < total_len; i++) {
+        y[i] = 0.0;
+    }
 
     for (int brow = 0; brow < A->nb; brow++) {
         int row_start = A->ia[brow];
@@ -178,7 +180,6 @@ void bc_matvec_omp_v2(const BlockedCSR * restrict A, const double * restrict x, 
     int bs        = A->bs;
     int total_len = A->nb * bs;
 
-    #pragma omp simd
     for (int i = 0; i < total_len; i++) {
         y[i] = 0.0;
     }
@@ -188,14 +189,49 @@ void bc_matvec_omp_v2(const BlockedCSR * restrict A, const double * restrict x, 
         int row_end   = A->ia[brow + 1];
         double *yrow  = &y[brow * bs];
 
-        #pragma omp simd
         for (int p = row_start; p < row_end; p++) {
             int bcol           = A->ja[p];
             const double *blk  = &A->vals[p * bs * bs];
             const double *xcol = &x[bcol * bs];
 
-           
-            
+
+            for (int i = 0; i < bs; i++) {
+                double acc = 0.0;
+
+                #pragma omp simd reduction(+:acc)
+                for (int j = 0; j < bs; j++) {
+                    acc += blk[i*bs + j] * xcol[j];
+                }
+
+                yrow[i] += acc;
+            }
+        }
+    }
+}
+
+void bc_matvec_omp_v3(const BlockedCSR * restrict A, const double * restrict x, double * restrict y) {
+    int bs        = A->bs;
+    int total_len = A->nb * bs;
+
+    for (int i = 0; i < total_len; i++) {
+        y[i] = 0.0;
+    }
+
+    for (int brow = 0; brow < A->nb; brow++) {
+        int row_start = A->ia[brow];
+        int row_end   = A->ia[brow + 1];
+        double *yrow  = &y[brow * bs];
+
+        for (int p = row_start; p < row_end; p++) {
+            int bcol           = A->ja[p];
+            const double *blk  = &A->vals[p * bs * bs];
+            const double *xcol = &x[bcol * bs];
+
+            #pragma omp simd 
+            for (int i = 0; i < bs; i++) {
+                double acc = 0.0;
+                yrow[i] += blk[i*bs + 0] * xcol[0] + blk[i*bs + 1] * xcol[1] + blk[i*bs + 2] * xcol[2];
+            }
         }
     }
 }
@@ -343,8 +379,8 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K, FILE *csv) {
         {"AVX512",    bc_matvec_avx512},
         {"OpenMP_v1", bc_matvec_omp_v1},
         {"OpenMP_v2", bc_matvec_omp_v2},
+        {"OpenMP_v3", bc_matvec_omp_v3}
     };
-    int num_variants = sizeof(variants) / sizeof(variants[0]);
 
     bc_matvec(A, x, y_ref); // obter y_ref para comparação
 
@@ -354,24 +390,21 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K, FILE *csv) {
     int B = 10;
 
     for (int v = 0; v < num_variants; v++) {
-        // Warmup
-        variants[v].func(A, x, y_test);
-
         double sum = 0.0;
 
+        variants[v].func(A, x, y_test); // "aquecimento" para cache
+ 
         for (int k = 0; k < K; k++) {
             double t0 = wtime();
-
-            for (int b = 0; b < B; b++) {
-                variants[v].func(A, x, y_test);
-            }
-
-            sample[k] = (wtime() - t0) / B;
+            variants[v].func(A, x, y_test);
+            sample[k] = wtime() - t0;
             sum += sample[k];
         }
 
         means[v]   = sum / K;
         medians[v] = median(sample, K);
+
+        // std_deviation = ...;
 
         double max_err = 0.0;
         for (int i = 0; i < 3 * N; i++) {
@@ -419,7 +452,6 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K, FILE *csv) {
 }
 
 
-
 int main(int argc, char **argv) {
     if (argc != 5) {
         printf("%s <inicio> <fim> <incremento> <K>\n", argv[0]);
@@ -436,7 +468,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    const char *names[] = {"Escalar", "AVX256", "AVX512", "OpenMP_v1", "OpenMP_v2"};
+    const char *names[] = {
+        "Escalar",
+        "AVX256",
+        "AVX512",
+        "OpenMP_v1",
+        "OpenMP_v2",
+        "OpenMP_v3"
+    };
 
     FILE *csv = fopen("resultados.csv", "w");
     fprintf(csv, "nx,ny,nz,N,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
@@ -445,13 +484,16 @@ int main(int argc, char **argv) {
         evaluate_bc_matvecs(nx, nx, nx, K, csv);
     }
 
+    fclose(csv);
+
     printf("=============================================================\n");
     printf("Speedup Geral (média harmônica sobre %d malhas)\n", gs_count);
     printf("=============================================================\n");
     printf("%-12s %16s %18s\n", "Variante", "Speedup (Mean)", "Speedup (Median)");
     printf("--------------------------------------------------\n");
 
-    fprintf(csv, "\nvariante,speedup_geral_mean,speedup_geral_median\n");
+    FILE *speedup_geral_csv = fopen("speedup_geral.csv", "w");
+    fprintf(speedup_geral_csv, "\nvariante,speedup_geral_mean,speedup_geral_median\n");
 
     for (int v = 0; v < num_variants; v++) {
         double speedup_mean   = gs_count / gs_mean[v];
@@ -462,14 +504,14 @@ int main(int argc, char **argv) {
                speedup_mean,
                speedup_median);
 
-        fprintf(csv, "%s,%.4f,%.4f\n",
+        fprintf(speedup_geral_csv, "%s,%.4f,%.4f\n",
             names[v],
             speedup_mean,
             speedup_median);
     }
     printf("\n");
 
-    fclose(csv);
+    fclose(speedup_geral_csv);
 
     return 0;
 }
