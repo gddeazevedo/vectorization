@@ -22,6 +22,12 @@ struct MatvecVariant {
     matvec_func func;
 };
 
+
+int num_variants = 5;
+double gs_mean[5]   = {0};
+double gs_median[5] = {0};
+int    gs_count     = 0;
+
 static inline double wtime() {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
@@ -313,7 +319,7 @@ static double median(double *arr, int n) {
     return m;
 }
 
-void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
+void evaluate_bc_matvecs(int nx, int ny, int nz, int K, FILE *csv) {
     int N = nx * ny * nz;
 
     printf("=============================================================\n");
@@ -327,7 +333,9 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
     double *y_ref  = malloc((size_t)3 * N * sizeof(double));
     double *y_test = malloc((size_t)3 * N * sizeof(double));
 
-    for (int i = 0; i < 3 * N; i++) x[i] = (double)i;
+    for (int i = 0; i < 3 * N; i++) {
+        x[i] = (double)i;
+    }
 
     struct MatvecVariant variants[] = {
         {"Escalar",   bc_matvec},
@@ -343,17 +351,25 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
     double *sample = malloc(K * sizeof(double));  // tempos individuais
     double  means[num_variants], medians[num_variants], errors[num_variants];
 
-    for (int v = 0; v < num_variants; v++) {
-        variants[v].func(A, x, y_test);  // warmup, para evitar medir overheads de cache misses iniciais
+    int B = 10;
 
-        // Coleta K amostras
+    for (int v = 0; v < num_variants; v++) {
+        // Warmup
+        variants[v].func(A, x, y_test);
+
         double sum = 0.0;
+
         for (int k = 0; k < K; k++) {
             double t0 = wtime();
-            variants[v].func(A, x, y_test);
-            sample[k] = wtime() - t0;
+
+            for (int b = 0; b < B; b++) {
+                variants[v].func(A, x, y_test);
+            }
+
+            sample[k] = (wtime() - t0) / B;
             sum += sample[k];
         }
+
         means[v]   = sum / K;
         medians[v] = median(sample, K);
 
@@ -369,15 +385,30 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
     double median_ref = medians[0];
 
     printf("%-12s %12s %9s %12s %9s %12s\n",
-           "Variante", "Media(s)", "Speedup", "Mediana(s)", "Speedup", "Erro Max");
+           "Variante", "Media(s)", "Speedup (Mean)", "Mediana(s)", "Speedup (Median)", "Erro Max");
     printf("--------------------------------------------------------------------------\n");
     for (int v = 0; v < num_variants; v++) {
-        printf("%-12s %12.6f %8.2fx %12.6f %8.2fx %12.2e\n",
+        double speedup_mean   = mean_ref   / means[v];
+        double speedup_median = median_ref / medians[v];
+
+        gs_mean[v]   += 1.0 / speedup_mean;
+        gs_median[v] += 1.0 / speedup_median;
+
+        printf("%-12s %12.6f %8.2fx %12.6f %8.2fx     %12.2e\n",
                variants[v].name,
-               means[v],   mean_ref   / means[v],
-               medians[v], median_ref / medians[v],
+               means[v],   speedup_mean,
+               medians[v], speedup_median,
                errors[v]);
+
+        fprintf(csv, "%d,%d,%d,%d,%s,%.6f,%.4f,%.6f,%.4f,%.2e\n",
+            nx, ny, nz, N,
+            variants[v].name,
+            means[v],   speedup_mean,
+            medians[v], speedup_median,
+            errors[v]);
     }
+
+    gs_count++;
     printf("\n");
 
     free(sample);
@@ -386,6 +417,8 @@ void evaluate_bc_matvecs(int nx, int ny, int nz, int K) {
     free(y_test);
     bc_free(A);
 }
+
+
 
 int main(int argc, char **argv) {
     if (argc != 5) {
@@ -403,9 +436,40 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    const char *names[] = {"Escalar", "AVX256", "AVX512", "OpenMP_v1", "OpenMP_v2"};
+
+    FILE *csv = fopen("resultados.csv", "w");
+    fprintf(csv, "nx,ny,nz,N,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
+
     for (int nx = ini; nx <= fim; nx += inc) {
-        evaluate_bc_matvecs(nx, nx, nx, K);
+        evaluate_bc_matvecs(nx, nx, nx, K, csv);
     }
+
+    printf("=============================================================\n");
+    printf("Speedup Geral (média harmônica sobre %d malhas)\n", gs_count);
+    printf("=============================================================\n");
+    printf("%-12s %16s %18s\n", "Variante", "Speedup (Mean)", "Speedup (Median)");
+    printf("--------------------------------------------------\n");
+
+    fprintf(csv, "\nvariante,speedup_geral_mean,speedup_geral_median\n");
+
+    for (int v = 0; v < num_variants; v++) {
+        double speedup_mean   = gs_count / gs_mean[v];
+        double speedup_median = gs_count / gs_median[v];
+
+        printf("%-12s %15.2fx %17.2fx\n",
+               names[v],
+               speedup_mean,
+               speedup_median);
+
+        fprintf(csv, "%s,%.4f,%.4f\n",
+            names[v],
+            speedup_mean,
+            speedup_median);
+    }
+    printf("\n");
+
+    fclose(csv);
 
     return 0;
 }
