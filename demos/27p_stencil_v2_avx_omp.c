@@ -64,11 +64,11 @@ static void bc_free(BlockedCSR *A) {
     free(A);
 }
 
-static void bc_push_block(BlockedCSR *A, int brow, int bcol, const double *bloc) {
+static void bc_push_block(BlockedCSR *A, int brow, int bcol, const double *block) {
     int bs = A->bs;
     int pos = A->nnzb;
     A->ja[pos] = bcol;
-    memcpy(&A->vals[(size_t)pos * bs * bs], bloc, (size_t)bs * bs * sizeof(double));
+    memcpy(&A->vals[(size_t)pos * bs * bs], block, (size_t)bs * bs * sizeof(double));
     A->nnzb++;
     A->ia[brow + 1] = A->nnzb;
 }
