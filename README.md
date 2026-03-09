@@ -2,5 +2,6 @@
 
 ## GCC
 
-> make gcc; \
-> make run \<inicio\> \<fim\> \<incremento\> \<iterações\>
+> make \<compiler\>-spmv \<inicio\> \<fim\> \<incremento\> \<iterações\>
+
+Example: make gcc-spmv 3 100 10 100
