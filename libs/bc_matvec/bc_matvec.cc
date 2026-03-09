@@ -136,6 +136,12 @@ static double hadd_256(__m256d v) {
 
 void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A->bs;
+
+    int total_len = A->nb * bs;
+
+    for (int i = 0; i < total_len; i++) {
+        y[i] = 0.0;
+    }
    
     for (int brow = 0; brow < A->nb; brow++) {
         int row_start = A->ia[brow];
@@ -183,6 +189,11 @@ void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restri
 
 void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A->bs; // = 3 neste caso
+
+    int total_len = A->nb * bs;
+    for (int i = 0; i < total_len; i++) {
+        y[i] = 0.0;
+    }
 
     // Índices de permutação para replicar os elementos de x
     // [x0, x1, x2, x0, x1, x2, x0, x1]

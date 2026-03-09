@@ -6,6 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <limits.h>
 #include <unistd.h>
 #include "bcsr.h"
 #include "bc_matvec.h"
@@ -25,4 +26,6 @@ static double wtime();
 static int cmp_double(const void *a, const void *b);
 static double median(double *arr, int n);
 void evaluate_bc_matvecs(int nx, int ny, int nz, int K, FILE *csv);
+static void ensure_experiment_dirs(const char *compiler, char *compiler_dir);
+static void build_path(char *out, const char *dir, const char *file);
 int run_spmv_benchmarks(int argc, char **argv);
