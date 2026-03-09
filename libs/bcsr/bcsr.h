@@ -15,7 +15,6 @@ typedef struct {
 
 BlockedCSR *bc_alloc(int nb, int bs, int max_nblocks);
 BlockedCSR *generate_blocked27_3x3(int nx, int ny, int nz);
-
 void bc_shrink_to_fit(BlockedCSR *A);
 void bc_free(BlockedCSR *A);
 void bc_push_block(BlockedCSR *A, int brow, int bcol, const double *block);
