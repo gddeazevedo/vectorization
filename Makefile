@@ -1,9 +1,9 @@
 BUILD_DIR := build
 RUN_ARGS  := $(filter-out run gcc clang icx clean rebuild-gcc rebuild-clang rebuild-icx,$(MAKECMDGOALS))
 
-GCC_FLAGS   := -O3 -march=native -fopenmp -ffast-math
-CLANG_FLAGS := -O3 -march=native -fopenmp -ffast-math
-ICX_FLAGS   := -O3 -xHost -ffast-math -qopenmp
+GCC_FLAGS   := -O3 -march=native -fopenmp -ffast-math -lm
+CLANG_FLAGS := -O3 -march=native -fopenmp -ffast-math -lm
+ICX_FLAGS   := -O3 -xHost -ffast-math -qopenmp -lm
 
 gcc-spmv: clean
 	cmake -B $(BUILD_DIR) -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CXX_FLAGS="$(GCC_FLAGS)"
