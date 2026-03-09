@@ -4,3 +4,4 @@
 - [MLK](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html)
 - [VTUNE tutorial](https://www.youtube.com/watch?v=1zdVFLajewM&list=PLg-UKERBljNw3_6Q598CS3DE7KqDXjP-d)
 - [Algorithms for Modern Hardware](https://en.algorithmica.org/hpc/)
+- [Highway C++](https://google.github.io/highway/en/master/index.html)
