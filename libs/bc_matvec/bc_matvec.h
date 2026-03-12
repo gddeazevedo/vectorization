@@ -16,3 +16,6 @@ void bc_matvec_omp_v3(const BlockedCSR * __restrict__ A, const double * __restri
 static double hadd_256(__m256d v);
 void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
 void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_avx512_v2(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_avx512_v3(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_avx512_v4(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);

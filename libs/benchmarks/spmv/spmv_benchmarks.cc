@@ -22,16 +22,42 @@ static double median(double *arr, int n) {
     return m;
 }
 
-void evaluate_bc_matvecs(
-    int nx,
-    int ny,
-    int nz,
-    int K,
-    FILE *csv,
-    double *gs_mean,
-    double *gs_median,
-    int    *gs_count
-) {
+static void ensure_dir(const char *path) {
+    if (access(path, F_OK) == -1) {
+        mkdir(path, 0755);
+    }
+}
+
+static void ensure_experiment_dirs(const std::string &compiler, std::string &compiler_dir) {
+    ensure_dir("experiments");
+    ensure_dir("experiments/spmv");
+    compiler_dir = "experiments/spmv/" + compiler;
+    ensure_dir(compiler_dir.c_str());
+}
+
+static std::string build_path(const std::string &dir, const std::string &file) {
+    return dir + "/" + file;
+}
+
+SpmvBenchmark::SpmvBenchmark(int ini, int fim, int inc, int K, const std::string &compiler) {
+    this->ini = ini;
+    this->fim = fim;
+    this->inc = inc;
+    this->K   = K;
+    this->compiler = compiler;
+
+    this->gs_mean   = std::vector<double>(variants.size(), 0.0);
+    this->gs_median = std::vector<double>(variants.size(), 0.0);
+}
+
+void SpmvBenchmark::evaluate_bc_matvecs(int nx, int ny, int nz) {
+    std::string compiler_dir;
+    ensure_experiment_dirs(compiler, compiler_dir);
+
+    std::string spmv_runs = build_path(compiler_dir, "spmv_runs.csv");
+    FILE *csv = fopen(spmv_runs.c_str(), "w");
+    fprintf(csv, "nx,ny,nz,N,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
+
     int N = nx * ny * nz;
 
     printf("=============================================================\n");
@@ -49,23 +75,12 @@ void evaluate_bc_matvecs(
         x[i] = (double)i;
     }
 
-    MatvecVariant variants[] = {
-        {"Escalar",   bc_matvec},
-        {"AVX256",    bc_matvec_avx256},
-        {"AVX512",    bc_matvec_avx512},
-        {"OpenMP_v1", bc_matvec_omp_v1},
-        {"OpenMP_v2", bc_matvec_omp_v2},
-        {"OpenMP_v3", bc_matvec_omp_v3}
-    };
-
     bc_matvec(A, x, y_ref); // obter y_ref para comparação
 
     double *sample = (double *)malloc(K * sizeof(double));  // tempos individuais
-    double  means[num_variants], medians[num_variants], errors[num_variants];
+    std::vector<double> means(variants.size()), medians(variants.size()), errors(variants.size());
 
-    int B = 10;
-
-    for (int v = 0; v < num_variants; v++) {
+    for (int v = 0; v < (int)variants.size(); v++) {
         double sum = 0.0;
 
         for (int i = 0; i < 5; i++) {
@@ -98,7 +113,7 @@ void evaluate_bc_matvecs(
     printf("%-12s %12s %9s %12s %9s %12s\n",
            "Variante", "Media(s)", "Speedup (Mean)", "Mediana(s)", "Speedup (Median)", "Erro Max");
     printf("--------------------------------------------------------------------------\n");
-    for (int v = 0; v < num_variants; v++) {
+    for (int v = 0; v < (int)variants.size(); v++) {
         double speedup_mean   = mean_ref   / means[v];
         double speedup_median = median_ref / medians[v];
 
@@ -106,22 +121,22 @@ void evaluate_bc_matvecs(
         gs_median[v] += 1.0 / speedup_median;
 
         printf("%-12s %12.6f %8.2fx %12.6f %8.2fx     %12.2e\n",
-               variants[v].name,
+               variants[v].name.c_str(),
                means[v],   speedup_mean,
                medians[v], speedup_median,
                errors[v]);
 
         fprintf(csv, "%d,%d,%d,%d,%s,%.6f,%.4f,%.6f,%.4f,%.2e\n",
             nx, ny, nz, N,
-            variants[v].name,
-            means[v],          // tempo absoluto em segundos
+            variants[v].name.c_str(),
+            means[v],
             speedup_mean,
             medians[v],
             speedup_median,
             errors[v]);
     }
 
-    (*gs_count)++;
+    gs_count++;
     printf("\n");
 
     free(sample);
@@ -129,69 +144,20 @@ void evaluate_bc_matvecs(
     free(y_ref);
     free(y_test);
     bc_free(A);
+
+    fclose(csv);
 }
 
-static void ensure_dir(const char *path) {
-    if (access(path, F_OK) == -1) {
-        mkdir(path, 0755);
-    }
-}
 
-static void ensure_experiment_dirs(const char *compiler, char *compiler_dir) {
-    ensure_dir("experiments");
-    ensure_dir("experiments/spmv");
-    snprintf(compiler_dir, PATH_MAX, "experiments/spmv/%s", compiler);
-    ensure_dir(compiler_dir);
-}
-
-static void build_path(char *out, const char *dir, const char *file) {
-    snprintf(out, PATH_MAX, "%s/%s", dir, file);
-}
-
-int run_spmv_benchmarks(int argc, char **argv) {
-    if (argc != 6) {
-        printf("%s <inicio> <fim> <incremento> <iterações>\n", argv[0]);
-        return 1;
-    }
-
-    double gs_mean[num_variants]   = {0};
-    double gs_median[num_variants] = {0};
-    int gs_count = 0;
-
-    int ini = atoi(argv[1]);
-    int fim = atoi(argv[2]);
-    int inc = atoi(argv[3]);
-    int K   = atoi(argv[4]);
-    char *compiler = argv[5];
-
+int SpmvBenchmark::run() {
     if (ini <= 0 || fim < ini || inc <= 0 || K <= 0) {
         printf("Parâmetros inválidos.\n");
         return 1;
     }
 
-    const char *names[] = {
-        "Escalar",
-        "AVX256",
-        "AVX512",
-        "OpenMP_v1",
-        "OpenMP_v2",
-        "OpenMP_v3"
-    };
-
-    char compiler_dir[PATH_MAX];
-    ensure_experiment_dirs(compiler, compiler_dir);
-
-    char spmv_runs[PATH_MAX];
-    build_path(spmv_runs, compiler_dir, "spmv_runs.csv");
-
-    FILE *csv = fopen(spmv_runs, "w");
-    fprintf(csv, "nx,ny,nz,N,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
-
     for (int nx = ini; nx <= fim; nx += inc) {
-        evaluate_bc_matvecs(nx, nx, nx, K, csv, gs_mean, gs_median, &gs_count);
+        evaluate_bc_matvecs(nx, nx, nx);
     }
-
-    fclose(csv);
 
     printf("=============================================================\n");
     printf("Speedup Geral (média harmônica sobre %d malhas)\n", gs_count);
@@ -199,23 +165,24 @@ int run_spmv_benchmarks(int argc, char **argv) {
     printf("%-12s %16s %18s\n", "Variante", "Speedup (Mean)", "Speedup (Median)");
     printf("--------------------------------------------------\n");
 
-    char spmv_general[PATH_MAX];
-    build_path(spmv_general, compiler_dir, "spmv_general.csv");
+    std::string compiler_dir;
+    ensure_experiment_dirs(compiler, compiler_dir);
+    std::string spmv_general = build_path(compiler_dir, "spmv_general.csv");
 
-    FILE *speedup_csv = fopen(spmv_general, "w");
+    FILE *speedup_csv = fopen(spmv_general.c_str(), "w");
     fprintf(speedup_csv, "variante,speedup_geral_mean,speedup_geral_median\n");
 
-    for (int v = 0; v < num_variants; v++) {
+    for (int v = 0; v < (int)variants.size(); v++) {
         double speedup_mean   = gs_count / gs_mean[v];
         double speedup_median = gs_count / gs_median[v];
 
         printf("%-12s %15.2fx %17.2fx\n",
-               names[v],
+               variants[v].name.c_str(),
                speedup_mean,
                speedup_median);
 
         fprintf(speedup_csv, "%s,%.4f,%.4f\n",
-                names[v],
+                variants[v].name.c_str(),
                 speedup_mean,
                 speedup_median);
     }

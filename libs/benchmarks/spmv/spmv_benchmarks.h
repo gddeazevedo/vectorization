@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,21 +13,44 @@
 #include "bcsr.h"
 #include "bc_matvec.h"
 
-#define num_variants 6
 
-typedef void (*matvec_func)(const BlockedCSR * __restrict__, const double * __restrict__, double * __restrict__);
+using matvec_func = void (*)(const BlockedCSR * __restrict__, const double * __restrict__, double * __restrict__);
 
 struct MatvecVariant {
-    const char *name;
+    const std::string name;
     matvec_func func;
 };
 
-typedef struct MatvecVariant MatvecVariant;
+class SpmvBenchmark {
+    public:
+        SpmvBenchmark(int ini, int fim, int inc, int K, const std::string &compiler);
+        int run();
+
+    private:
+        FILE *output_file;
+        int ini, fim, inc, K;
+        std::string compiler;
+        std::vector<double> gs_mean;
+        std::vector<double> gs_median;
+        int gs_count = 0;
+        std::vector<MatvecVariant> variants = {
+            {"Escalar",   bc_matvec},
+            {"AVX256",    bc_matvec_avx256},
+            {"AVX512",    bc_matvec_avx512},
+            {"AVX512_v2", bc_matvec_avx512_v2},
+            {"AVX512_v3", bc_matvec_avx512_v3},
+            {"AVX512_v4", bc_matvec_avx512_v4},
+            {"OpenMP_v1", bc_matvec_omp_v1},
+            {"OpenMP_v2", bc_matvec_omp_v2},
+            {"OpenMP_v3", bc_matvec_omp_v3}
+        };
+
+        void evaluate_bc_matvecs(int nx, int ny, int nz);
+};
+
 
 static double wtime(); 
 static int cmp_double(const void *a, const void *b);
-static double median(double *arr, int n);
-void evaluate_bc_matvecs(int nx, int ny, int nz, int K, FILE *csv);
-static void ensure_experiment_dirs(const char *compiler, char *compiler_dir);
-static void build_path(char *out, const char *dir, const char *file);
-int run_spmv_benchmarks(int argc, char **argv);
+static double median(std::vector<double> &arr);
+static void ensure_experiment_dirs(const std::string &compiler, std::string &compiler_dir);
+static std::string build_path(const std::string &dir, const std::string &file);
