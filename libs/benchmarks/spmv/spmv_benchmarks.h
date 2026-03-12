@@ -45,7 +45,7 @@ class SpmvBenchmark {
             {"OpenMP_v3", bc_matvec_omp_v3}
         };
 
-        void evaluate_bc_matvecs(int nx, int ny, int nz);
+        void evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv);
 };
 
 
