@@ -12,7 +12,9 @@ int main(int argc, char **argv) {
     int fim = atoi(argv[2]);
     int inc = atoi(argv[3]);
     int K   = atoi(argv[4]);
+
     std::string compiler = argv[5];
+
     SpmvBenchmark benchmark(ini, fim, inc, K, compiler);
 
     return benchmark.run();
