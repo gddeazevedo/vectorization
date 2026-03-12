@@ -642,71 +642,71 @@ int main(int argc, char **argv) {
 
 
 
-int main2(int argc, char **argv) {
-    int nx, ny, nz;
+// int main2(int argc, char **argv) {
+//     int nx, ny, nz;
 
-    if (argc != 4) {
-        printf("%s <nx> <ny> <nz>\n", argv[0]);
-        return 1;
-    }
+//     if (argc != 4) {
+//         printf("%s <nx> <ny> <nz>\n", argv[0]);
+//         return 1;
+//     }
 
-    nx = atoi(argv[1]);
-    ny = atoi(argv[2]);
-    nz = atoi(argv[3]);
+//     nx = atoi(argv[1]);
+//     ny = atoi(argv[2]);
+//     nz = atoi(argv[3]);
 
-    int N = nx * ny * nz;
-    printf("Gerando blocked CSR 27-pt stencil para malha %dx%dx%d (N=%d)\n",
-           nx, ny, nz, N);
+//     int N = nx * ny * nz;
+//     printf("Gerando blocked CSR 27-pt stencil para malha %dx%dx%d (N=%d)\n",
+//            nx, ny, nz, N);
 
-    BlockedCSR *A = generate_blocked27_3x3(nx, ny, nz);
+//     BlockedCSR *A = generate_blocked27_3x3(nx, ny, nz);
 
-    double *x      = malloc((size_t)3*N * sizeof(double));
-    double *y_ref  = malloc((size_t)3*N * sizeof(double));
-    double *y_avx  = malloc((size_t)3*N * sizeof(double));
+//     double *x      = malloc((size_t)3*N * sizeof(double));
+//     double *y_ref  = malloc((size_t)3*N * sizeof(double));
+//     double *y_avx  = malloc((size_t)3*N * sizeof(double));
 
-    for (int i = 0; i < 3*N; i++) x[i] = 1.0;
+//     for (int i = 0; i < 3*N; i++) x[i] = 1.0;
 
-    int K = 100;  // número de repetições
+//     int K = 100;  // número de repetições
 
-    // ============================
-    //   Tempo escalar
-    // ============================
-    double t0 = wtime();
-    for (int k = 0; k < K; k++)
-        bc_matvec(A, x, y_ref);
-    double t1 = wtime();
+//     // ============================
+//     //   Tempo escalar
+//     // ============================
+//     double t0 = wtime();
+//     for (int k = 0; k < K; k++)
+//         bc_matvec(A, x, y_ref);
+//     double t1 = wtime();
 
-    double time_scalar = (t1 - t0) / K;
+//     double time_scalar = (t1 - t0) / K;
 
 
-    // ============================
-    //   Tempo AVX
-    // ============================
-    double t2 = wtime();
-    for (int k = 0; k < K; k++)
-        bc_matvec_avx3(A, x, y_avx);
-    double t3 = wtime();
+//     // ============================
+//     //   Tempo AVX
+//     // ============================
+//     double t2 = wtime();
+//     for (int k = 0; k < K; k++)
+//         bc_matvec_avx3(A, x, y_avx);
+//     double t3 = wtime();
 
-    double time_avx = (t3 - t2) / K;
+//     double time_avx = (t3 - t2) / K;
 
-    // ============================
-    //   Verificação
-    // ============================
-    double max_err = 0.0;
-    for (int i = 0; i < 3*N; i++) {
-        double diff = fabs(y_ref[i] - y_avx[i]);
-        if (diff > max_err) max_err = diff;
-    }
+//     // ============================
+//     //   Verificação
+//     // ============================
+//     double max_err = 0.0;
+//     for (int i = 0; i < 3*N; i++) {
+//         double diff = fabs(y_ref[i] - y_avx[i]);
+//         if (diff > max_err) max_err = diff;
+//     }
 
-    printf("\n--- Resultados ---\n");
-    printf("Tempo escalar = %.6f s\n", time_scalar);
-    printf("Tempo AVX     = %.6f s\n", time_avx);
-    printf("Speedup       = %.2f x\n", time_scalar / time_avx);
-    printf("Máximo erro   = %.6e\n\n", max_err);
+//     printf("\n--- Resultados ---\n");
+//     printf("Tempo escalar = %.6f s\n", time_scalar);
+//     printf("Tempo AVX     = %.6f s\n", time_avx);
+//     printf("Speedup       = %.2f x\n", time_scalar / time_avx);
+//     printf("Máximo erro   = %.6e\n\n", max_err);
 
-    free(x);
-    free(y_ref);
-    free(y_avx);
-    bc_free(A);
-    return 0;
-}
+//     free(x);
+//     free(y_ref);
+//     free(y_avx);
+//     bc_free(A);
+//     return 0;
+// }

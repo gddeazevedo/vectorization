@@ -1,3 +1,11 @@
 out/*
 !out/.gitkeep
 .vscode
+*.out
+build/
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+*.log
