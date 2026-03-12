@@ -33,7 +33,7 @@ class SpmvBenchmark {
         std::vector<double> gs_mean;
         std::vector<double> gs_median;
         int gs_count = 0;
-        std::vector<MatvecVariant> variants = {
+        const std::vector<MatvecVariant> variants = {
             {"Escalar",   bc_matvec},
             {"AVX256",    bc_matvec_avx256},
             {"AVX512",    bc_matvec_avx512},

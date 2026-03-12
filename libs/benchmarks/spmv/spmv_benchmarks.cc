@@ -147,6 +147,7 @@ int SpmvBenchmark::run() {
     }
 
     std::string compiler_dir;
+
     ensure_experiment_dirs(compiler, compiler_dir);
 
     std::string spmv_runs = build_path(compiler_dir, "spmv_runs.csv");
@@ -157,13 +158,14 @@ int SpmvBenchmark::run() {
         evaluate_bc_matvecs(nx, nx, nx, runs_csv);
     }
 
+    fclose(runs_csv);
+
     printf("=============================================================\n");
     printf("Speedup Geral (média harmônica sobre %d malhas)\n", gs_count);
     printf("=============================================================\n");
     printf("%-12s %16s %18s\n", "Variante", "Speedup (Mean)", "Speedup (Median)");
     printf("--------------------------------------------------\n");
 
-    std::string compiler_dir;
     ensure_experiment_dirs(compiler, compiler_dir);
     std::string spmv_general = build_path(compiler_dir, "spmv_general.csv");
 
