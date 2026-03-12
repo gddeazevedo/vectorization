@@ -1,8 +1,0 @@
-
-variante,speedup_geral_mean,speedup_geral_median
-Escalar,0.0000,0.0000
-AVX256,0.0000,0.0000
-AVX512,0.0000,0.0000
-OpenMP_v1,0.0000,0.0000
-OpenMP_v2,0.0000,0.0000
-OpenMP_v3,0.0000,0.0000
