@@ -4,7 +4,7 @@
 #include <immintrin.h>
 #include "bcsr.h"
 
-#define MASK_ZERO_SLOT_3 0x8 // 0b1000 (big endian) | 0b0001 (little endian)
+#define MASK_ZERO_SLOT_3 0x8  // 0b1000 (big endian) | 0b0001 (little endian)
 #define MASK_SUM_FIRST_3 0x07 // 0b00000111
 #define MASK_SUM_MID_3   0x38 // 0b00111000
 #define MASK_SUM_LAST_2  0xC0 // 0b11000000
