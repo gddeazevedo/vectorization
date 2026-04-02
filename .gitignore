@@ -10,3 +10,5 @@ build/
 *.exe
 *.log
 .venv
+perf.data
+perf.data.old
