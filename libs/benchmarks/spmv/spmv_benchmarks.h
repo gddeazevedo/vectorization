@@ -14,11 +14,11 @@
 #include "bc_matvec.h"
 
 
-using matvec_func = void (*)(const BlockedCSR * __restrict__, const double * __restrict__, double * __restrict__);
+using matvec_func_t = void (*)(const BlockedCSR * __restrict__, const double * __restrict__, double * __restrict__);
 
 struct MatvecVariant {
     const std::string name;
-    matvec_func func;
+    matvec_func_t func;
 };
 
 class SpmvBenchmark {
