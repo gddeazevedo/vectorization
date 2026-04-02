@@ -38,8 +38,6 @@ class SpmvBenchmark {
             {"AVX256",    bc_matvec_avx256},
             {"AVX512",    bc_matvec_avx512},
             {"AVX512_v2", bc_matvec_avx512_v2},
-            {"AVX512_v3", bc_matvec_avx512_v3},
-            {"AVX512_v4", bc_matvec_avx512_v4},
             {"OpenMP_v1", bc_matvec_omp_v1},
             {"OpenMP_v2", bc_matvec_omp_v2},
             {"OpenMP_v3", bc_matvec_omp_v3}

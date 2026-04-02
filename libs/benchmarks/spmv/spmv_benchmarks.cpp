@@ -120,7 +120,7 @@ void SpmvBenchmark::evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv) 
                errors[v]);
 
         fprintf(runs_csv, "%d,%d,%d,%d,%s,%.6f,%.4f,%.6f,%.4f,%.2e\n",
-            nx, ny, nz, N,
+            N, nx, ny, nz,
             variants[v].name.c_str(),
             means[v],
             speedup_mean,
@@ -149,10 +149,10 @@ int SpmvBenchmark::run() {
     std::string compiler_dir;
 
     ensure_experiment_dirs(compiler, compiler_dir);
-
+    
     std::string spmv_runs = build_path(compiler_dir, "spmv_runs.csv");
-    FILE *runs_csv = fopen(spmv_runs.c_str(), "a");
-    fprintf(runs_csv, "nx,ny,nz,N,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
+    FILE *runs_csv = fopen(spmv_runs.c_str(), "w");
+    fprintf(runs_csv, "N,nx,ny,nz,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
 
     for (int nx = ini; nx <= fim; nx += inc) {
         evaluate_bc_matvecs(nx, nx, nx, runs_csv);
