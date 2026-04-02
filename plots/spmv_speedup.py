@@ -4,25 +4,14 @@ import numpy as np
 import os
 
 COLORS = {
-    "Escalar":    "#6b7280",
-    "AVX256":     "#f59e0b",
-    "AVX512":     "#3b82f6",
-    "AVX512_v2":  "#8b5cf6",
-    "OpenMP_v1":  "#ef4444",
-    "OpenMP_v2":  "#84cc16",
-    "OpenMP_v3":  "#f97316",
+    "Escalar": "#7f7f7f",
+    "AVX256": "#1f77b4",
+    "AVX512": "#ff7f0e",
+    "AVX512_v2": "#2ca02c",
+    "OpenMP_v1": "#d62728",
+    "OpenMP_v2": "#9467bd",
+    "OpenMP_v3": "#8c564b",
 }
-
-MARKERS = {
-    "Escalar":    "o",
-    "AVX256":     "s",
-    "AVX512":     "^",
-    "AVX512_v2":  "D",
-    "OpenMP_v1":  "X",
-    "OpenMP_v2":  "*",
-    "OpenMP_v3":  "h",
-}
-
 
 def plot_speedup(df, metric, title, filename):
     _, ax = plt.subplots(figsize=(10, 6))
@@ -34,13 +23,11 @@ def plot_speedup(df, metric, title, filename):
             subset[metric],
             label=variante,
             color=COLORS.get(variante, None),
-            marker=MARKERS.get(variante, "o"),
             linewidth=2,
             markersize=6,
         )
 
     ax.set_xscale("log")
-    # ax.set_yscale("log")
 
     ax.set_xlabel("N (dimensão da matriz)", fontsize=12)
     ax.set_ylabel("Speedup", fontsize=12)
@@ -54,36 +41,32 @@ def plot_speedup(df, metric, title, filename):
     plt.close()
 
 
-def plot_speedup_bars(df, metric, title, filename):
-    variantes = df["variante"].unique()
-    n_values = sorted(df["N"].unique())
-    n_variantes = len(variantes)
+def plot_speedup_general(df, metrics, labels_metrics, title, filename):
+    variantes = df["variante"].values
+    n_metrics = len(metrics)
 
-    _, ax = plt.subplots(figsize=(max(10, len(n_values) * 2.5), 6))
+    _, ax = plt.subplots(figsize=(max(10, len(variantes) * 2), 6))
 
-    bar_width = 0.8 / n_variantes
-    x = np.arange(len(n_values))
+    bar_width = 0.8 / n_metrics
+    x = np.arange(len(variantes))
 
-    for i, variante in enumerate(variantes):
-        valores = []
-        for n in n_values:
-            row = df[(df["variante"] == variante) & (df["N"] == n)]
-            valores.append(row[metric].values[0] if len(row) > 0 else 0)
+    bar_colors = ["#4285F4", "#EA4335"]
 
-        offset = (i - n_variantes / 2 + 0.5) * bar_width
+    for i, (metric, label) in enumerate(zip(metrics, labels_metrics)):
+        offset = (i - n_metrics / 2 + 0.5) * bar_width
         ax.bar(
             x + offset,
-            valores,
+            df[metric].values,
             bar_width,
-            label=variante,
-            color=COLORS.get(variante, None),
+            label=label,
+            color=bar_colors[i],
             edgecolor="white",
             linewidth=0.5,
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels([str(n) for n in n_values])
-    ax.set_xlabel("N (dimensão da matriz)", fontsize=12)
+    ax.set_xticklabels(variantes, rotation=25, ha="right", fontsize=11)
+    ax.set_xlabel("Variante", fontsize=12)
     ax.set_ylabel("Speedup", fontsize=12)
     ax.set_title(title, fontsize=14, fontweight="bold")
     ax.legend(loc="best", fontsize=9, framealpha=0.9)
@@ -117,16 +100,12 @@ for dirname in os.listdir():
         filename=f"{dirname}/spmv_speedup_median.png",
     )
 
-    plot_speedup_bars(
-        df,
-        metric="speedup_mean",
-        title="SpMV — Speedup Médio por Variante (Barras)",
-        filename=f"{dirname}/spmv_speedup_mean_bars.png",
-    )
+    df = pd.read_csv(f"{dirname}/spmv_general.csv")
 
-    plot_speedup_bars(
+    plot_speedup_general(
         df,
-        metric="speedup_median",
-        title="SpMV — Mediana do Speedup por Variante (Barras)",
-        filename=f"{dirname}/spmv_speedup_median_bars.png",
+        metrics=["speedup_geral_mean", "speedup_geral_median"],
+        labels_metrics=["Speedup Médio", "Mediana do Speedup"],
+        title="SpMV — Speedup por Variante (Geral)",
+        filename=f"{dirname}/spmv_speedup_general.png",
     )
