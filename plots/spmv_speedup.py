@@ -40,7 +40,7 @@ def plot_speedup(df, metric, title, filename):
         )
 
     ax.set_xscale("log")
-    ax.set_yscale("log")
+    # ax.set_yscale("log")
 
     ax.set_xlabel("N (dimensão da matriz)", fontsize=12)
     ax.set_ylabel("Speedup", fontsize=12)
