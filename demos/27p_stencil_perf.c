@@ -140,16 +140,16 @@ void bc_matvec(const BlockedCSR * restrict A, const double * restrict x, double 
             const double *blk = &A->vals[p * bs * bs];
             const double *xcol = &x[bcol * bs];
             yrow[0] += blk[0] * xcol[0];
-            yrow[0] += blk[1] * xcol[1];
-            yrow[0] += blk[2] * xcol[2];
-            
             yrow[1] += blk[3] * xcol[0];
-            yrow[1] += blk[4] * xcol[1];
-            yrow[1] += blk[5] * xcol[2];
-
             yrow[2] += blk[6] * xcol[0];
-            yrow[2] += blk[7] * xcol[1];
+
+            yrow[0] += blk[1] * xcol[1];
+            yrow[1] += blk[4] * xcol[1];
             yrow[2] += blk[8] * xcol[2];
+
+            yrow[0] += blk[2] * xcol[2];
+            yrow[1] += blk[5] * xcol[2];
+            yrow[2] += blk[7] * xcol[1];
         }
     }
 }
