@@ -85,5 +85,21 @@ std::vector<double> lu_solve(matrix_t<double> A, std::vector<double> b) {
 }
 
 int main() {
+    matrix_t<double> A = {
+        {4, -2, 1},
+        {3, 6, -4},
+        {2, 1, 8}
+    };
+
+    std::vector<double> b = {12, -25, 32};
+
+    std::vector<double> x = lu_solve(A, b);
+
+    std::cout << "Solution: ";
+    for (double xi : x) {
+        std::cout << xi << " ";
+    }
+    std::cout << std::endl;
+
     return 0;
 }
