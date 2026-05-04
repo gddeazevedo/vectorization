@@ -3,7 +3,10 @@ project(vectorization)
 
 set(CMAKE_CXX_STANDARD 23)
 
+# Find a package (usually provided by something external to the project), and load its package-specific details.
+# Calls to this command can also be intercepted by dependency providers.
 find_package(OpenMP REQUIRED)
+find_package(hwy)
 
 add_subdirectory(libs)
 
@@ -18,4 +21,5 @@ target_link_libraries(vectorization
     bc_matvec
     bcsr
     OpenMP::OpenMP_CXX
+    hwy
 ) # where are the dependencies for the main executable
