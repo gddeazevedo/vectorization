@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 COLORS = {
-    "Escalar": "#7f7f7f",
+    "Base": "#7f7f7f",
     "AVX256": "#1f77b4",
     "AVX512": "#ff7f0e",
     "AVX512_v2": "#2ca02c",

@@ -1,4 +1,4 @@
-#include "bcsr.h"
+#include <bcsr.h>
 
 BlockedCSR *bc_alloc(int nb, int bs, int max_nblocks) {
     BlockedCSR *A = (BlockedCSR *)malloc(sizeof(BlockedCSR));

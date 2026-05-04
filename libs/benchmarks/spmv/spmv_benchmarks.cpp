@@ -1,4 +1,4 @@
-#include "spmv_benchmarks.h"
+#include <spmv_benchmarks.h>
 
 
 static double wtime() {

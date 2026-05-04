@@ -10,8 +10,8 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <unistd.h>
-#include "bcsr.h"
-#include "bc_matvec.h"
+#include <bcsr.h>
+#include <bc_matvec.h>
 
 
 using matvec_func_t = void (*)(const BlockedCSR * __restrict__, const double * __restrict__, double * __restrict__);
@@ -34,7 +34,7 @@ class SpmvBenchmark {
         std::vector<double> gs_median;
         int gs_count = 0;
         const std::vector<MatvecVariant> variants = {
-            {"Escalar",   bc_matvec},
+            {"Base",      bc_matvec},
             {"AVX256",    bc_matvec_avx256},
             {"AVX512",    bc_matvec_avx512},
             {"AVX512_v2", bc_matvec_avx512_v2},

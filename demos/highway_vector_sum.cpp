@@ -1,5 +1,5 @@
 #include <cstdio>
-#include "hwy/highway.h"
+#include <hwy/highway.h>
 
 namespace hn = hwy::HWY_NAMESPACE;
 

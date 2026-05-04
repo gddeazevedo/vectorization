@@ -1,6 +1,6 @@
 #include <iostream>
-#include "bcsr.h"
-#include "spmv_benchmarks.h"
+#include <bcsr.h>
+#include <spmv_benchmarks.h>
 
 int main(int argc, char **argv) {
     if (argc != 6) {

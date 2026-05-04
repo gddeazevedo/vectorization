@@ -1,5 +1,5 @@
 variante,speedup_geral_mean,speedup_geral_median
-Escalar,1.0000,1.0000
+Base,1.0000,1.0000
 AVX256,1.2080,1.2130
 AVX512,1.2098,1.2290
 AVX512_v2,1.2158,1.2179
