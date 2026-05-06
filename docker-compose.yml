@@ -1,0 +1,8 @@
+services:
+  vectorization:
+    container_name: vectorization
+    build: .
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true

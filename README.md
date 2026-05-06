@@ -1,5 +1,8 @@
 # How to run
 
+> docker build -t vectorization .
+> docker run --rm -it vectorization
+
 ## GCC
 
 > make \<compiler\>-spmv \<inicio\> \<fim\> \<incremento\> \<iterações\>
