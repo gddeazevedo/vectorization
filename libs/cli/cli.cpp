@@ -1,0 +1,50 @@
+#include <cli.h>
+#include <spmv_benchmarks.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+CLI::CLI(int argc, char **argv) : argc(argc), argv(argv) {}
+
+void CLI::print_usage(const char *prog) {
+    printf("Uso: %s <operacao> <compilador>\n\n", prog);
+    printf("Operacoes disponiveis:\n");
+    printf("  spmv\n");
+    printf("  ilu   (em desenvolvimento)\n");
+}
+
+int CLI::run() {
+    if (argc != 3) {
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    operation = argv[1];
+    compiler  = argv[2];
+
+    if (operation == "spmv") {
+        return run_spmv();
+    } else if (operation == "ilu") {
+        return run_ilu();
+    } else {
+        fprintf(stderr, "Operacao desconhecida: %s\n\n", operation.c_str());
+        print_usage(argv[0]);
+        return 1;
+    }
+}
+
+int CLI::run_spmv() {
+    constexpr int ini = 10;
+    constexpr int fim = 100;
+    constexpr int inc = 10;
+    constexpr int K   = 50;
+
+    SpmvBenchmark benchmark(ini, fim, inc, K, compiler);
+    return benchmark.run();
+}
+
+int CLI::run_ilu() {
+    // TODO: implementar benchmarks de ILU
+    fprintf(stderr, "ILU benchmarks ainda nao implementados.\n");
+    return 1;
+}

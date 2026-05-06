@@ -1,21 +1,27 @@
 BUILD_DIR := build
-RUN_ARGS  := $(filter-out run gcc icx clean rebuild-gcc rebuild-icx,$(MAKECMDGOALS))
+OPERATION := $(word 2,$(MAKECMDGOALS))
 
 GCC_FLAGS   := -O3 -march=native -fopenmp -ffast-math -lm
 ICX_FLAGS   := -O3 -xHost -ffast-math -qopenmp -lm
 
-gcc-spmv: clean
+up:
+	docker compose up -d
+
+down:
+	docker compose down
+
+bash:
+	docker compose exec vectorization bash
+
+gcc: clean
 	cmake -B $(BUILD_DIR) -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CXX_FLAGS="$(GCC_FLAGS)"
 	cmake --build $(BUILD_DIR)
-	./$(BUILD_DIR)/vectorization $(filter-out $@,$(MAKECMDGOALS)) gcc
+	./$(BUILD_DIR)/vectorization $(OPERATION) gcc
 
-icx-spmv: clean
-	cmake -B $(BUILD_DIR) -DCMAKE_CXX_COMPILER=icpx -DCMAKE_CXX_FLAGS='$(ICX_FLAGS)' && \
+icx: clean
+	cmake -B $(BUILD_DIR) -DCMAKE_CXX_COMPILER=icpx -DCMAKE_CXX_FLAGS='$(ICX_FLAGS)'
 	cmake --build $(BUILD_DIR)
-	@bash -c "source /opt/intel/oneapi/setvars.sh && ./$(BUILD_DIR)/vectorization $(filter-out $@,$(MAKECMDGOALS)) icx"
-
-run:
-	@bash -c "source /opt/intel/oneapi/setvars.sh && ./$(BUILD_DIR)/vectorization $(RUN_ARGS)"
+	./$(BUILD_DIR)/vectorization $(OPERATION) icx
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -23,4 +29,4 @@ clean:
 %:
 	@:
 
-.PHONY: gcc icx run clean
+.PHONY: gcc icx clean up down bash
