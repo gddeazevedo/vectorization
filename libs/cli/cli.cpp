@@ -34,10 +34,10 @@ int CLI::run() {
 }
 
 int CLI::run_spmv() {
-    constexpr int ini = 10;
-    constexpr int fim = 100;
+    constexpr int ini = 3;
+    constexpr int fim = 200;
     constexpr int inc = 10;
-    constexpr int K   = 50;
+    constexpr int K   = 100;
 
     SpmvBenchmark benchmark(ini, fim, inc, K, compiler);
     return benchmark.run();
