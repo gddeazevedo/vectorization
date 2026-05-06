@@ -49,7 +49,6 @@ void bc_push_block(BlockedCSR *A, int brow, int bcol, const double *block) {
     A->ia[brow + 1] = A->nnzb;
 }
 
-
 BlockedCSR *generate_blocked27_3x3(int nx, int ny, int nz) {
     int N = nx * ny * nz;
     int bs = 3;
@@ -84,10 +83,12 @@ BlockedCSR *generate_blocked27_3x3(int nx, int ny, int nz) {
                         }
                     }
                 }
+
                 A->ia[id + 1] = nnz_count;
             }
         }
     }
+
     A->nnzb = nnz_count;
     bc_shrink_to_fit(A);
     return A;
@@ -98,16 +99,19 @@ void bc_draw(const BlockedCSR *A) {
 
     for(int i = 0; i < nb; i++) {
         for(int j = 0; j < nb; j++) {
-            unsigned char isBlock = 0;
-            for(int k = A->ia[i]; k < A->ia[i + 1]; k++) {
-                if(j == A->ja[k]) {
+            bool is_block = false;
+            int row_start = A->ia[i];
+            int row_end   = A->ia[i + 1];
+
+            for(int idx = row_start; idx < row_end; idx++) {
+                if(j == A->ja[idx]) {
                     printf("[X]");
-                    isBlock = 1;
+                    is_block = true;
                     break;
                 }           
             }
 
-            if(isBlock == 0) {
+            if(!is_block) {
                 printf("   ");
             } 
         }
