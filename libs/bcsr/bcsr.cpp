@@ -1,22 +1,32 @@
 #include <bcsr.h>
 
 BlockedCSR *bc_alloc(int nb, int bs, int max_nblocks) {
-    BlockedCSR *A = new BlockedCSR;
-    if (!A) { perror("malloc A"); exit(1); }
+    BlockedCSR *A = (BlockedCSR *) malloc(sizeof(BlockedCSR));
+
+    if (!A) {
+        perror("malloc A");
+        exit(1);
+    }
+
     A->nb = nb;
     A->bs = bs;
     A->nnzb = 0;
-    A->ia = new int[nb + 1];
-    A->ja = (int *)malloc(max_nblocks * sizeof(int));
-    A->vals = (double *)malloc((size_t)max_nblocks * bs * bs * sizeof(double));
-    if (!A->ia || !A->ja || !A->vals) { perror("malloc arrays"); exit(1); }
+    A->ia   = (int *) malloc((nb + 1) * sizeof(int));
+    A->ja   = (int *) malloc(max_nblocks * sizeof(int));
+    A->vals = (double *) malloc(max_nblocks * bs * bs * sizeof(double));
+
+    if (!A->ia || !A->ja || !A->vals) {
+        perror("malloc arrays");
+        exit(1);
+    }
+
     A->ia[0] = 0;
     return A;
 }
 
 void bc_shrink_to_fit(BlockedCSR *A) {
-    A->ja = (int *)realloc(A->ja, (size_t)A->nnzb * sizeof(int));
-    A->vals = (double *)realloc(A->vals, (size_t)A->nnzb * A->bs * A->bs * sizeof(double));
+    A->ja   = (int *) realloc(A->ja, A->nnzb * sizeof(int));
+    A->vals = (double *) realloc(A->vals, A->nnzb * A->bs * A->bs * sizeof(double));
 }
 
 void bc_free(BlockedCSR *A) {
@@ -24,10 +34,10 @@ void bc_free(BlockedCSR *A) {
         return;
     }
 
-    delete[] A->ia;
+    free(A->ia);
     free(A->ja);
     free(A->vals);
-    delete A;
+    free(A);
 }
 
 void bc_push_block(BlockedCSR *A, int brow, int bcol, const double *block) {
