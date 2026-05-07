@@ -65,11 +65,16 @@ void intrinsics_add_arrays() {
 
     auto chunks = sizeof(__m512d) / sizeof(double);
 
-    for (int i = 0; i + chunks <= SIZE; i += chunks) {
+    int i = 0;
+    for (; i + chunks <= SIZE; i += chunks) {
         __m512d vec_even = _mm512_loadu_pd(even_numbers + i);
         __m512d vec_odd = _mm512_loadu_pd(odd_numbers + i);
         __m512d vec_result = _mm512_add_pd(vec_even, vec_odd);
-        _mm512_storeu_pd(&even_numbers[i], vec_result);
+        _mm512_storeu_pd(even_numbers + i, vec_result);
+    }
+
+    for (; i < SIZE; i++) {
+        even_numbers[i] = even_numbers[i] + odd_numbers[i];
     }
 
     delete[] even_numbers;

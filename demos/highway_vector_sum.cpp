@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <hwy/highway.h>
+#include <hwy/print-inl.h>
 
 namespace hn = hwy::HWY_NAMESPACE;
 
@@ -10,14 +11,40 @@ void AddArrays(
     const size_t n
 ) {
     const hn::ScalableTag<float> d;
-    const size_t N_LANES = hn::Lanes(d);
+    const size_t N_LANES = hn::Lanes(d); // é a quantidade que um registrador pode conter, por exemplo, 8 para AVX2 e 16 para AVX-512 no caso de floats
+
+    std::printf("FLOAT: Vector size: %zu, Lanes: %zu\n", n, N_LANES);
 
     size_t i = 0;
     for (; i + N_LANES <= n; i += N_LANES) {
-        auto va = hn::Load(d, a + i);
-        auto vb = hn::Load(d, b + i);
-        auto vsum = hn::Add(va, vb);
+        auto va   = hn::Load(d, a + i);
+        auto vb   = hn::Load(d, b + i);
+        auto vsum = va + vb;
         hn::Store(vsum, d, out + i);
+    }
+
+    for (; i < n; ++i) {
+        out[i] = a[i] + b[i];
+    }
+}
+
+void AddArrays(
+    const double *HWY_RESTRICT a,
+    const double *HWY_RESTRICT b,
+    double *HWY_RESTRICT out,
+    const size_t n
+) {
+    const hn::ScalableTag<double> d;
+    const size_t N_LANES = hn::Lanes(d); // é a quantidade que um registrador pode conter, por exemplo, 4 para AVX2 e 8 para AVX-512 no caso de doubles
+
+    std::printf("DOUBLE: Vector size: %zu, Lanes: %zu\n", n, N_LANES);
+
+    size_t i = 0;
+    for (; i + N_LANES <= n; i += N_LANES) {
+        auto va   = hn::LoadU(d, a + i);
+        auto vb   = hn::LoadU(d, b + i);
+        auto vsum = hn::Add(va, vb);
+        hn::StoreU(vsum, d, out + i);
     }
 
     for (; i < n; ++i) {

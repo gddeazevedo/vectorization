@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     make \
+    gcc \
     g++ \
     libomp-dev \
     git \

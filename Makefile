@@ -2,7 +2,7 @@ BUILD_DIR := build
 OPERATION := $(word 2,$(MAKECMDGOALS))
 
 GCC_FLAGS   := -O3 -march=native -fopenmp -ffast-math -lm -lhwy
-ICX_FLAGS   := -O3 -xHost -ffast-math -qopenmp -lm -lhwy
+ICX_FLAGS   := -O3 -xHost -march=native -ffast-math -qopenmp -lm -lhwy
 
 up:
 	docker compose up -d
