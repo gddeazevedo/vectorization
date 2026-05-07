@@ -30,7 +30,7 @@ ENV PATH="/opt/intel/oneapi/compiler/latest/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib"
 
 # Highway C++ SIMD library (build from source)
-RUN git clone --depth 1 --branch 1.2.0 https://github.com/google/highway.git /tmp/highway && \
+RUN git clone --depth 1 --branch 1.3.0 https://github.com/google/highway.git /tmp/highway && \
     cmake -S /tmp/highway -B /tmp/highway/build \
         -DCMAKE_BUILD_TYPE=Release \
         -DHWY_ENABLE_TESTS=OFF \

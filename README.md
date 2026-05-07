@@ -51,7 +51,7 @@ src/            # ponto de entrada (main.cpp)
 libs/
   cli/          # CLI de selecao de operacao
   bcsr/         # formato Blocked CSR
-  bc_matvec/    # variantes de matvec (base, AVX256, AVX512, OpenMP)
+  bc_matvec/    # variantes de matvec (base, AVX256, AVX512, OpenMP, Highway)
   benchmarks/
     spmv/       # benchmarks de SpMV
     ilu/        # benchmarks de ILU (TODO)

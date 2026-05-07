@@ -184,7 +184,7 @@ void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restri
 }
 
 
-void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
+void bc_matvec_avx512_masked_reduce(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A->bs; // = 3 neste caso
 
     for (int i = 0; i < A->nb * bs; i++) {
@@ -228,7 +228,7 @@ void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restri
     }
 }
 
-void bc_matvec_avx512_v2(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
+void bc_matvec_avx512_scalar_reduce(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A->bs; // = 3 neste caso
 
     for (int i = 0; i < A->nb * bs; i++) {
@@ -276,5 +276,92 @@ void bc_matvec_avx512_v2(const BlockedCSR * __restrict__ A, const double * __res
 }
 
 void bc_matvec_hwy(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    // TODO: Implementar versão usando Highway
+    int bs = A->bs;
+
+    const hn::ScalableTag<double> d;
+    const hn::Rebind<int64_t, decltype(d)> di;
+    const size_t N_LANES = hn::Lanes(d);
+
+    HWY_ALIGN const int64_t perm_lanes[8] = {0, 1, 2, 0, 1, 2, 0, 1};
+    const auto perm = hn::IndicesFromVec(d, hn::Load(di, perm_lanes));
+
+    for (int i = 0; i < A->nb * bs; i++) {
+        y[i] = 0.0;
+    }
+
+    for (int brow = 0; brow < A->nb; brow++) {
+        int row_start = A->ia[brow];
+        int row_end   = A->ia[brow + 1];
+
+        double *yrow = &y[brow * bs];
+        auto acc = hn::Set(d, 0.0);
+        double y2_extra = 0.0;
+
+        for (int idx = row_start; idx < row_end; idx++) {
+            int bcol = A->ja[idx];
+
+            const double *block = &A->vals[(size_t)idx * bs * bs];
+            const double *xcol  = &x[(size_t)bcol * bs];
+
+            auto v_block = hn::LoadU(d, block);
+            auto v_xcol_raw = hn::LoadU(d, xcol);
+            auto v_xcol = hn::TableLookupLanes(v_xcol_raw, perm);
+
+            acc = hn::MulAdd(v_block, v_xcol, acc);
+            y2_extra += block[8] * xcol[2];
+        }
+
+        const auto m_first_3 = hn::FirstN(d, 3);
+        const auto m_first_6 = hn::FirstN(d, 6);
+        const auto m_mid_3   = hn::AndNot(m_first_3, m_first_6);
+        const auto m_last_2  = hn::Not(m_first_6);
+
+        yrow[0] = hn::MaskedReduceSum(d, m_first_3, acc);
+        yrow[1] = hn::MaskedReduceSum(d, m_mid_3,   acc);
+        yrow[2] = hn::MaskedReduceSum(d, m_last_2,  acc) + y2_extra;
+    }
+}
+
+void bc_matvec_hwy_v2(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A->bs;
+
+    const hn::FixedTag<double, 4> d;
+    const size_t N_LANES = hn::Lanes(d);
+
+    for (int i = 0; i < A->nb * bs; i++) {
+        y[i] = 0.0;
+    }
+
+    const auto m_first_3 = hn::FirstN(d, 3);
+
+    for (int brow = 0; brow < A->nb; brow++) {
+        int row_start = A->ia[brow];
+        int row_end   = A->ia[brow + 1];
+
+        double *yrow = &y[brow * bs];
+        auto acc0 = hn::Zero(d);
+        auto acc1 = hn::Zero(d);
+        auto acc2 = hn::Zero(d);
+
+        for (int idx = row_start; idx < row_end; idx++) {
+            int bcol = A->ja[idx];
+
+            const double *block = &A->vals[(size_t)idx * bs * bs];
+            const double *xcol  = &x[(size_t)bcol * bs];
+
+            auto v_xcol = hn::MaskedLoad(m_first_3, d, xcol);
+
+            auto v_b0 = hn::MaskedLoad(m_first_3, d, &block[0]);
+            auto v_b1 = hn::MaskedLoad(m_first_3, d, &block[3]);
+            auto v_b2 = hn::MaskedLoad(m_first_3, d, &block[6]);
+
+            acc0 = hn::MulAdd(v_b0, v_xcol, acc0);
+            acc1 = hn::MulAdd(v_b1, v_xcol, acc1);
+            acc2 = hn::MulAdd(v_b2, v_xcol, acc2);
+        }
+
+        yrow[0] = hn::ReduceSum(d, acc0);
+        yrow[1] = hn::ReduceSum(d, acc1);
+        yrow[2] = hn::ReduceSum(d, acc2);
+    }
 }
