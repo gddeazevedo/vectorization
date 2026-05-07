@@ -1,8 +1,4 @@
 #include <cli.h>
-#include <spmv_benchmarks.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 
 CLI::CLI(int argc, char **argv) : argc(argc), argv(argv) {}
 

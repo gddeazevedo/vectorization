@@ -1,6 +1,10 @@
 #pragma once
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
+#include <spmv_benchmarks.h>
 
 class CLI {
 public:
