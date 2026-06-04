@@ -44,7 +44,7 @@ void bc_matvec_omp_v1(const BlockedCSR * __restrict__ A, const double * __restri
 
         double s0 = 0.0, s1 = 0.0, s2 = 0.0;
 
-        #pragma omp simd reduction(+:s0,s1,s2)
+        #pragma omp simd reduction(+:s0,s1,s2) simdlen(3)
         for (int p = row_start; p < row_end; p++) {
             int bcol           = A->ja[p];
             const double *blk  = &A->vals[p * bs * bs];
@@ -81,7 +81,7 @@ void bc_matvec_omp_v2(const BlockedCSR * __restrict__ A, const double * __restri
             for (int i = 0; i < bs; i++) {
                 double acc = 0.0;
 
-                #pragma omp simd reduction(+:acc)
+                #pragma omp simd reduction(+:acc) simdlen(3)
                 for (int j = 0; j < bs; j++) {
                     acc += blk[i*bs + j] * xcol[j];
                 }
@@ -109,7 +109,7 @@ void bc_matvec_omp_v3(const BlockedCSR * __restrict__ A, const double * __restri
             const double *blk  = &A->vals[p * bs * bs];
             const double *xcol = &x[bcol * bs];
 
-            #pragma omp simd 
+            #pragma omp simd simdlen(3)
             for (int i = 0; i < bs; i++) {
                 double acc = 0.0;
                 yrow[i] += blk[i*bs + 0] * xcol[0] + blk[i*bs + 1] * xcol[1] + blk[i*bs + 2] * xcol[2];
@@ -303,9 +303,9 @@ void bc_matvec_hwy(const BlockedCSR * __restrict__ A, const double * __restrict_
             const double *block = &A->vals[(size_t)idx * bs * bs];
             const double *xcol  = &x[(size_t)bcol * bs];
 
-            auto v_block = hn::LoadU(d, block);
+            auto v_block    = hn::LoadU(d, block);
             auto v_xcol_raw = hn::LoadU(d, xcol);
-            auto v_xcol = hn::TableLookupLanes(v_xcol_raw, perm);
+            auto v_xcol     = hn::TableLookupLanes(v_xcol_raw, perm);
 
             acc = hn::MulAdd(v_block, v_xcol, acc);
             y2_extra += block[8] * xcol[2];

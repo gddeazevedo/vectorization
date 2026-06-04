@@ -1,0 +1,10 @@
+variante,speedup_geral_mean,speedup_geral_median
+Base,1.0000,1.0000
+AVX256,1.2252,1.2240
+AVX512,1.2312,1.2338
+AVX512_v2,1.2470,1.2426
+OpenMP_v1,1.0675,1.0636
+OpenMP_v2,0.5666,0.5705
+OpenMP_v3,0.9326,0.9319
+Highway,1.2479,1.2452
+Highway_v2,1.2421,1.2396
