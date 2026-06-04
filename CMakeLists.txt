@@ -23,6 +23,7 @@ target_link_libraries(vectorization
     bcsr
     cli
     ilu
+    utils
     OpenMP::OpenMP_CXX
     hwy
 ) # where are the dependencies for the main executable

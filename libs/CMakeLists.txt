@@ -12,12 +12,19 @@ add_library(bc_matvec
 target_include_directories(bc_matvec PUBLIC bc_matvec) # where are the headers for bc_matvec
 target_link_libraries(bc_matvec PUBLIC bcsr) # where are the dependencies for bc_matvec
 
+
+add_library(
+    utils
+    utils/utils.cpp
+)
+target_include_directories(utils PUBLIC utils) # where are the headers for utils
+
 # benchmarks/spmv
 add_library(spmv_benchmarks
     benchmarks/spmv/spmv_benchmarks.cpp
 )
 target_include_directories(spmv_benchmarks PUBLIC benchmarks/spmv) # where are the headers for spmv_benchmarks
-target_link_libraries(spmv_benchmarks PUBLIC bcsr bc_matvec) # where are the dependencies for spmv_benchmarks
+target_link_libraries(spmv_benchmarks PUBLIC bcsr bc_matvec utils) # where are the dependencies for spmv_benchmarks
 
 add_library(cli cli/cli.cpp)
 target_include_directories(cli PUBLIC cli) # where are the headers for cli
@@ -32,4 +39,4 @@ add_library(ilu_benchmarks
     benchmarks/ilu/ilu_benchmarks.cpp
 )
 target_include_directories(ilu_benchmarks PUBLIC benchmarks/ilu) # where are the headers for ilu_benchmarks
-target_link_libraries(ilu_benchmarks PUBLIC ilu) # where are the dependencies for ilu_benchmarks
+target_link_libraries(ilu_benchmarks PUBLIC ilu utils) # where are the dependencies for ilu_benchmarks

@@ -1,15 +1,6 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <limits.h>
-#include <unistd.h>
+#include <utils.h>
 #include <bcsr.h>
 #include <bc_matvec.h>
 
@@ -30,14 +21,14 @@ class SpmvBenchmark {
         std::vector<double> gs_median;
         int gs_count = 0;
         const std::vector<MatvecVariant> variants = {
-            {"Base",      bc_matvec},
-            {"AVX256",    bc_matvec_avx256},
-            {"AVX512",    bc_matvec_avx512_masked_reduce},
-            {"AVX512_v2", bc_matvec_avx512_scalar_reduce},
-            {"OpenMP_v1", bc_matvec_omp_v1},
-            {"OpenMP_v2", bc_matvec_omp_v2},
-            {"OpenMP_v3", bc_matvec_omp_v3},
-            {"Highway",   bc_matvec_hwy},
+            {"Base",       bc_matvec},
+            {"AVX256",     bc_matvec_avx256},
+            {"AVX512",     bc_matvec_avx512_masked_reduce},
+            {"AVX512_v2",  bc_matvec_avx512_scalar_reduce},
+            {"OpenMP_v1",  bc_matvec_omp_v1},
+            {"OpenMP_v2",  bc_matvec_omp_v2},
+            {"OpenMP_v3",  bc_matvec_omp_v3},
+            {"Highway",    bc_matvec_hwy},
             {"Highway_v2", bc_matvec_hwy_v2},
         };
 
@@ -47,10 +38,3 @@ class SpmvBenchmark {
         SpmvBenchmark(int ini, int fim, int inc, int K, const std::string &compiler);
         int run();
 };
-
-
-static double wtime(); 
-static int cmp_double(const void *a, const void *b);
-static double median(std::vector<double> &arr);
-static void ensure_experiment_dirs(const std::string &compiler, std::string &compiler_dir);
-static std::string build_path(const std::string &dir, const std::string &file);
