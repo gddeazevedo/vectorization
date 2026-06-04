@@ -4,14 +4,22 @@ import numpy as np
 import os
 
 COLORS = {
-    "Base": "#7f7f7f",
-    "AVX256": "#1f77b4",
-    "AVX512": "#ff7f0e",
-    "AVX512_v2": "#2ca02c",
-    "OpenMP_v1": "#d62728",
-    "OpenMP_v2": "#9467bd",
-    "OpenMP_v3": "#8c564b",
+    "Base":      "#6c757d",
+    "AVX256":    "#0d6efd",
+    "AVX512":    "#fd7e14",
+    "AVX512_v2": "#198754",
+    "OpenMP_v1": "#dc3545",
+    "OpenMP_v2": "#6f42c1",
+    "OpenMP_v3": "#20c997",
+    "Highway":   "#e91e8c",
+    "Highway_v2":"#ffc107",
 }
+
+COMPILER_COLORS = {
+    "gcc": "#4285F4",
+    "icx": "#EA4335",
+}
+
 
 def plot_speedup(df, metric, title, filename):
     _, ax = plt.subplots(figsize=(10, 6))
@@ -78,34 +86,54 @@ def plot_speedup_general(df, metrics, labels_metrics, title, filename):
     plt.close()
 
 
-os.chdir("../experiments/spmv")
+def plot_compiler_comparison(compiler_data, metric, metric_label, title, filename):
+    """
+    Compara o speedup geral entre compiladores.
 
-for dirname in os.listdir():
-    if len(os.listdir(dirname)) == 0:
-        continue
+    compiler_data: dict {compiler_name: DataFrame com colunas [variante, metric]}
+    """
+    compilers = list(compiler_data.keys())
+    n_compilers = len(compilers)
 
-    df = pd.read_csv(f"{dirname}/spmv_runs.csv")
+    all_variantes = []
+    for df in compiler_data.values():
+        for v in df["variante"].values:
+            if v not in all_variantes:
+                all_variantes.append(v)
 
-    plot_speedup(
-        df,
-        metric="speedup_mean",
-        title="SpMV — Speedup Médio por Variante",
-        filename=f"{dirname}/spmv_speedup_mean.png",
-    )
+    _, ax = plt.subplots(figsize=(max(10, len(all_variantes) * 2), 6))
 
-    plot_speedup(
-        df,
-        metric="speedup_median",
-        title="SpMV — Mediana do Speedup por Variante",
-        filename=f"{dirname}/spmv_speedup_median.png",
-    )
+    bar_width = 0.8 / n_compilers
+    x = np.arange(len(all_variantes))
 
-    df = pd.read_csv(f"{dirname}/spmv_general.csv")
+    for i, compiler in enumerate(compilers):
+        df = compiler_data[compiler]
+        values = []
+        for v in all_variantes:
+            row = df[df["variante"] == v]
+            values.append(row[metric].values[0] if len(row) > 0 else 0)
 
-    plot_speedup_general(
-        df,
-        metrics=["speedup_geral_mean", "speedup_geral_median"],
-        labels_metrics=["Speedup Médio", "Mediana do Speedup"],
-        title="SpMV — Speedup por Variante (Geral)",
-        filename=f"{dirname}/spmv_speedup_general.png",
-    )
+        offset = (i - n_compilers / 2 + 0.5) * bar_width
+        color = COMPILER_COLORS.get(compiler, f"C{i}")
+        ax.bar(
+            x + offset,
+            values,
+            bar_width,
+            label=compiler,
+            color=color,
+            edgecolor="white",
+            linewidth=0.5,
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(all_variantes, rotation=25, ha="right", fontsize=11)
+    ax.set_xlabel("Variante", fontsize=12)
+    ax.set_ylabel(metric_label, fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight="bold")
+    ax.legend(loc="best", fontsize=10, framealpha=0.9)
+    ax.grid(True, linestyle="--", alpha=0.3, axis="y")
+    ax.axhline(y=1.0, color="gray", linestyle=":", linewidth=1.5, alpha=0.8)
+
+    plt.tight_layout()
+    plt.savefig(filename, dpi=150)
+    plt.close()

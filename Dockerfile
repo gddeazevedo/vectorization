@@ -29,6 +29,13 @@ RUN wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-P
 ENV PATH="/opt/intel/oneapi/compiler/latest/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/latest/lib"
 
+# Python 3 (installed AFTER oneAPI to avoid conflicts)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
 # Highway C++ SIMD library (build from source)
 RUN git clone --depth 1 --branch 1.3.0 https://github.com/google/highway.git /tmp/highway && \
     cmake -S /tmp/highway -B /tmp/highway/build \

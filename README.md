@@ -13,6 +13,7 @@ Benchmarks de operações de algebra linear com vetorização (AVX256, AVX512) e
 - Intel oneAPI (icpx) — opcional
 - CMake >= 3.10
 - Google Highway (SIMD)
+- Python 3 com pip (para geração de gráficos)
 
 Todas as dependencias sao instaladas automaticamente via Docker.
 
@@ -44,6 +45,30 @@ make gcc spmv    # compila com g++ e roda benchmark SpMV
 make icx spmv    # compila com icpx e roda benchmark SpMV
 ```
 
+## Gerar gráficos
+
+Após rodar os benchmarks, gere os gráficos de speedup com o CLI:
+
+```bash
+pip install pandas matplotlib --break-system-packages
+python3 main.py <operacao>
+```
+
+### Exemplos
+
+```bash
+python3 main.py spmv    # gera gráficos de speedup do SpMV
+python3 main.py ilu     # gera gráficos de speedup do ILU
+```
+
+Os gráficos são salvos em `experiments/<operacao>/<compilador>/` junto aos CSVs correspondentes.
+
+### Gráficos gerados por operação
+
+- `<op>_speedup_mean.png` — speedup médio por variante em função de N
+- `<op>_speedup_median.png` — mediana do speedup por variante em função de N
+- `<op>_speedup_general.png` — speedup geral (média e mediana) por variante (barras)
+
 ## Estrutura
 
 ```
@@ -56,7 +81,9 @@ libs/
     spmv/       # benchmarks de SpMV
     ilu/        # benchmarks de ILU (TODO)
   ilu/          # fatoracao ILU (TODO)
-experiments/    # resultados dos benchmarks (CSV)
-plots/          # scripts de visualizacao
+experiments/    # resultados dos benchmarks (CSV + gráficos)
+plots/          # scripts de visualização (funções de plot)
+  plots/
+  main.py         # CLI para geração de gráficos
 demos/          # exemplos avulsos de vetorizacao
 ```

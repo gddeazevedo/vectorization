@@ -12,3 +12,17 @@ build/
 .venv
 perf.data
 perf.data.old
+env
+.venv
+venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.DS_Store
+.idea/
+*.iml
+*.ipr
+*.iws
+*.sublime-project
