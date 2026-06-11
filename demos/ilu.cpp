@@ -44,7 +44,7 @@ void free_matrix(double **mat, int n) {
     delete[] mat;
 }
 
-ilu_decomposition_t ilu0_decompose(double **A, int n) {
+ilu_decomposition_t ilu0_decompose(const double **A, int n) {
     double **L = new double *[n];
     double **U = new double *[n];
 
