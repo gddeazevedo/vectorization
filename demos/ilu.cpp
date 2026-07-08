@@ -71,16 +71,20 @@ ilu_decomposition_t ilu0_decompose(const double **A, int n) {
 
             L[i][k] = L[i][k] / U[k][k];
 
-            for (int j = k + 1; j < n; j++) {
+            for (int j = k + 1; j < i; j++) {
                 if (A[i][j] == 0.0) {
                     continue;
                 }
 
-                if (i <= j) {
-                    U[i][j] = U[i][j] - L[i][k] * U[k][j];
-                } else {
-                    L[i][j] = L[i][j] - L[i][k] * U[k][j];
+                L[i][j] = L[i][j] - L[i][k] * U[k][j];
+            }
+
+            for (int j = i; j < n; j++) {
+                if (A[i][j] == 0.0) {
+                    continue;
                 }
+
+                U[i][j] = U[i][j] - L[i][k] * U[k][j];
             }
         }
     }
@@ -131,7 +135,7 @@ int main() {
     printf("Original Matrix:\n");
     print_matrix(mat, n);
     
-    ilu_decomposition_t ilu = ilu0_decompose(mat, n);
+    ilu_decomposition_t ilu = ilu0_decompose(const_cast<const double **>(mat), n);
 
     double **L = ilu.L;
     double **U = ilu.U;
