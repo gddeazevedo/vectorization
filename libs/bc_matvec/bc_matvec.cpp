@@ -19,9 +19,9 @@ void bc_matvec(const BlockedCSR * __restrict__ A, const double * __restrict__ x,
             const double *block = &A->vals[block_idx * bs * bs];
             const double *xcol  = &x[block_col * bs];
 
-            yrow[0] += blk[0]*xcol[0] + blk[1]*xcol[1] + blk[2]*xcol[2];
-            yrow[1] += blk[3]*xcol[0] + blk[4]*xcol[1] + blk[5]*xcol[2];
-            yrow[2] += blk[6]*xcol[0] + blk[7]*xcol[1] + blk[8]*xcol[2];
+            yrow[0] += block[0]*xcol[0] + block[1]*xcol[1] + block[2]*xcol[2];
+            yrow[1] += block[3]*xcol[0] + block[4]*xcol[1] + block[5]*xcol[2];
+            yrow[2] += block[6]*xcol[0] + block[7]*xcol[1] + block[8]*xcol[2];
         }
     }
 }
@@ -47,12 +47,12 @@ void bc_matvec_omp(const BlockedCSR * __restrict__ A, const double * __restrict_
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
             int block_col      = A->ja[block_idx];
 
-            const double *blk  = &A->vals[block_idx * bs * bs];
+            const double *block  = &A->vals[block_idx * bs * bs];
             const double *xcol = &x[block_col * bs];
 
-            y0 += blk[0]*xcol[0] + blk[1]*xcol[1] + blk[2]*xcol[2];
-            y1 += blk[3]*xcol[0] + blk[4]*xcol[1] + blk[5]*xcol[2];
-            y2 += blk[6]*xcol[0] + blk[7]*xcol[1] + blk[8]*xcol[2];
+            y0 += block[0]*xcol[0] + block[1]*xcol[1] + block[2]*xcol[2];
+            y1 += block[3]*xcol[0] + block[4]*xcol[1] + block[5]*xcol[2];
+            y2 += block[6]*xcol[0] + block[7]*xcol[1] + block[8]*xcol[2];
         }
 
         yrow[0] += y0;
@@ -139,11 +139,11 @@ void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restri
 
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
             int block_col = A->ja[block_idx];
-            const double *blk = &A->vals[(size_t)block_idx * bs * bs];
+            const double *block = &A->vals[(size_t)block_idx * bs * bs];
             const double *xcol = &x[(size_t)block_col * bs];
 
            
-            __m512d vb = _mm512_loadu_pd(blk);  // Carrega 8 elementos do bloco
+            __m512d vb = _mm512_loadu_pd(block);  // Carrega 8 elementos do bloco
 
             __m256d vx_256 = _mm256_loadu_pd(xcol); // Carrega xcol em um vetor de 256 bits
             
@@ -151,7 +151,7 @@ void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restri
             vx_512 = _mm512_permutexvar_pd(perm_idx, vx_512);
 
             acc = _mm512_fmadd_pd(vb, vx_512, acc); // FMA: acc += vb * vx_512
-            y2_extra += blk[8] * xcol[2];
+            y2_extra += block[8] * xcol[2];
         }
 
         yrow[0] = _mm512_mask_reduce_add_pd(MASK_SUM_FIRST_3, acc);
