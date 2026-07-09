@@ -4,15 +4,11 @@ import numpy as np
 import os
 
 COLORS = {
-    "Base":      "#6c757d",
-    "AVX256":    "#0d6efd",
-    "AVX512":    "#fd7e14",
-    "AVX512_v2": "#198754",
-    "OpenMP_v1": "#dc3545",
-    "OpenMP_v2": "#6f42c1",
-    "OpenMP_v3": "#20c997",
-    "Highway":   "#e91e8c",
-    "Highway_v2":"#ffc107",
+    "Base":    "#6c757d",
+    "OpenMP":  "#dc3545",
+    "AVX256":  "#0d6efd",
+    "AVX512":  "#fd7e14",
+    "Highway": "#17E110",
 }
 
 COMPILER_COLORS = {
@@ -24,13 +20,16 @@ COMPILER_COLORS = {
 def plot_speedup(df, metric, title, filename):
     _, ax = plt.subplots(figsize=(10, 6))
 
-    for variante in df["variante"].unique():
+    markers = ["o", "s", "^", "D", "X", "P", "v", "<", ">", "h"]
+
+    for i, variante in enumerate(df["variante"].unique()):
         subset = df[df["variante"] == variante].sort_values("N")
         ax.plot(
             subset["N"],
             subset[metric],
             label=variante,
             color=COLORS.get(variante, None),
+            marker=markers[i % len(markers)],
             linewidth=2,
             markersize=6,
         )
@@ -87,11 +86,6 @@ def plot_speedup_general(df, metrics, labels_metrics, title, filename):
 
 
 def plot_compiler_comparison(compiler_data, metric, metric_label, title, filename):
-    """
-    Compara o speedup geral entre compiladores.
-
-    compiler_data: dict {compiler_name: DataFrame com colunas [variante, metric]}
-    """
     compilers = list(compiler_data.keys())
     n_compilers = len(compilers)
 
