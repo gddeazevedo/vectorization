@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define BS 3
+
+#define idx(i, j) i * BS + j
+
 struct BlockedCSR {
    int nb;       // número de "block rows" (nós)
    int bs;       // block size vamos usar 3 
@@ -128,6 +132,46 @@ void bc_draw(const BlockedCSR *A) {
 
             if(!is_block) {
                 printf("   ");
+            } 
+        }
+
+        printf("\n");
+    }
+}
+
+void draw_global_matrix(const BlockedCSR *A) {
+    int nb = A->nb;
+    int bs = A->bs;
+
+    for(int i = 0; i < nb; i++) {
+        for(int j = 0; j < nb; j++) {
+            bool is_block = false;
+            int row_start = A->ia[i];
+            int row_end   = A->ia[i + 1];
+
+            for(int idx = row_start; idx < row_end; idx++) {
+                if(j == A->ja[idx]) {
+                    double *block = &A->vals[(size_t) idx * bs * bs];
+
+                    for (int row = 0; row < BS; row ++) {
+                        for (int col = 0; col < BS; col++) {
+                            printf("%.2f ", block[idx(row, col)]);
+                        }
+                        printf("\n");
+                    }
+
+                    is_block = true;
+                    break;
+                }           
+            }
+
+            if(!is_block) {
+                for (int row = 0; row < BS; row ++) {
+                    for (int col = 0; col < BS; col++) {
+                        printf(" ");
+                    }
+                    printf("\n");
+                }
             } 
         }
 
