@@ -139,43 +139,39 @@ void bc_draw(const BlockedCSR *A) {
     }
 }
 
+double *get_block(const BlockedCSR *A, int row, int col) {
+    int row_start = A->ia[row];
+    int row_end   = A->ia[row + 1];
+
+    for (int p = row_start; p < row_end; p++) {
+        if (A->ja[p] == row) {
+            return &A->vals[(size_t)p * A->bs * A->bs];
+        }
+    }
+
+    return nullptr;
+}
+
+
 void draw_global_matrix(const BlockedCSR *A) {
     int nb = A->nb;
     int bs = A->bs;
 
-    for(int i = 0; i < nb; i++) {
-        for(int j = 0; j < nb; j++) {
-            bool is_block = false;
-            int row_start = A->ia[i];
-            int row_end   = A->ia[i + 1];
+    for (int i = 0; i < nb; i++) {
+        for (int row = 0; row < bs; row++) {
+            for (int j = 0; j < nb; j++) {
+                double *block = get_block(A, i, j);
 
-            for(int idx = row_start; idx < row_end; idx++) {
-                if(j == A->ja[idx]) {
-                    double *block = &A->vals[(size_t) idx * bs * bs];
-
-                    for (int row = 0; row < BS; row ++) {
-                        for (int col = 0; col < BS; col++) {
-                            printf("%.2f ", block[idx(row, col)]);
-                        }
-                        printf("\n");
+                for (int col = 0; col < bs; col++) {
+                    if (block != nullptr) {
+                        printf("%.2f ", block[row * bs + col]);
+                    } else {
+                        printf("  ");
                     }
-
-                    is_block = true;
-                    break;
-                }           
-            }
-
-            if(!is_block) {
-                for (int row = 0; row < BS; row ++) {
-                    for (int col = 0; col < BS; col++) {
-                        printf(" ");
-                    }
-                    printf("\n");
                 }
-            } 
+            }
+            printf("\n");
         }
-
-        printf("\n");
     }
 }
 

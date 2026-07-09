@@ -54,20 +54,6 @@ double *matsub(const double *A, const double *B) {
     return C;
 }
 
-double *get_block(const BlockedCSR *A, int row, int col) {
-    int row_start = A->ia[row];
-    int row_end   = A->ia[row + 1];
-
-    for (int p = row_start; p < row_end; p++) {
-        if (A->ja[p] == row) {
-            return &A->vals[(size_t)p * A->bs * A->bs];
-        }
-    }
-
-    return nullptr;
-}
-
-
 void ilu0_decomposition(BlockedCSR *A) {
     for (int i = 0; i < A->nb; i++) {
         int row_start = A->ia[i];
@@ -124,7 +110,7 @@ void ilu0_decomposition(BlockedCSR *A) {
 
 
 int main() {
-    BlockedCSR *A = generate_blocked27_3x3(3, 3, 3);
+    BlockedCSR *A = generate_blocked27_3x3(2, 2, 2);
 
     bc_draw(const_cast<const BlockedCSR *>(A));
 
