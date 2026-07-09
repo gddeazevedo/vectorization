@@ -1,14 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+
 
 COLORS = {
-    "Base":    "#6c757d",
-    "OpenMP":  "#dc3545",
-    "AVX256":  "#0d6efd",
-    "AVX512":  "#fd7e14",
-    "Highway": "#17E110",
+    "Base":       "#6c757d",
+    "OpenMP":     "#dc3545",
+    "AVX256":     "#0d6efd",
+    "AVX512":     "#fd7e14",
+    "Highway256": "#17E110",
+    "Highway512": "#58309C",
 }
 
 COMPILER_COLORS = {

@@ -18,11 +18,12 @@ class SpmvBenchmark {
         std::vector<double> gs_median;
         int gs_count = 0;
         const std::vector<MatvecVariant> variants = {
-            {"Base",    bc_matvec},
-            {"OpenMP",  bc_matvec_omp},
-            {"AVX256",  bc_matvec_avx256},
-            {"AVX512",  bc_matvec_avx512},
-            {"Highway", bc_matvec_hwy}
+            {"Base",       bc_matvec},
+            {"OpenMP",     bc_matvec_omp},
+            {"AVX256",     bc_matvec_avx256},
+            {"AVX512",     bc_matvec_avx512},
+            {"Highway256", bc_matvec_hwy_256},
+            {"Highway512", bc_matvec_hwy_512}
         };
 
         void evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv);

@@ -20,4 +20,5 @@ void bc_matvec(const BlockedCSR * __restrict__ A, const double * __restrict__ x,
 void bc_matvec_omp(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
 void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
 void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_hwy(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy_256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy_512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
