@@ -18,12 +18,13 @@ add_executable(vectorization src/main.cpp)
 target_link_libraries(vectorization
     PUBLIC
     spmv_benchmarks
-    ilu_benchmarks
+    ilu0_benchmarks
     bc_matvec
     bcsr
     cli
-    ilu
+    ilu0
     utils
+    helpers
     OpenMP::OpenMP_CXX
     hwy
 ) # where are the dependencies for the main executable

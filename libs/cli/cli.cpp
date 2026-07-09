@@ -6,7 +6,7 @@ void CLI::print_usage(const char *prog) {
     printf("Uso: %s <operacao> <compilador>\n\n", prog);
     printf("Operacoes disponiveis:\n");
     printf("  spmv\n");
-    printf("  ilu   (em desenvolvimento)\n");
+    printf("  ilu0\n");
 }
 
 int CLI::run() {
@@ -20,8 +20,8 @@ int CLI::run() {
 
     if (operation == "spmv") {
         return run_spmv();
-    } else if (operation == "ilu") {
-        return run_ilu();
+    } else if (operation == "ilu0") {
+        return run_ilu0();
     } else {
         fprintf(stderr, "Operacao desconhecida: %s\n\n", operation.c_str());
         print_usage(argv[0]);
@@ -39,8 +39,8 @@ int CLI::run_spmv() {
     return benchmark.run();
 }
 
-int CLI::run_ilu() {
-    // TODO: implementar benchmarks de ILU
-    fprintf(stderr, "ILU benchmarks ainda nao implementados.\n");
+int CLI::run_ilu0() {
+    // TODO: implementar benchmarks de ILU0
+    fprintf(stderr, "ILU0 benchmarks ainda nao implementados.\n");
     return 1;
 }

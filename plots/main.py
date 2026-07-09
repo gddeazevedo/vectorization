@@ -46,7 +46,7 @@ def operation_config(name, label):
 
 OPERATIONS = {
     "spmv": operation_config("spmv", "SpMV"),
-    "ilu":  operation_config("ilu", "ILU"),
+    "ilu0":  operation_config("ilu0", "ilu0"),
 }
 
 COMPILER_LABELS = {
@@ -151,7 +151,7 @@ def main():
     parser.add_argument(
         "operation",
         choices=OPERATIONS.keys(),
-        help="Operação para gerar gráficos (spmv ou ilu)",
+        help="Operação para gerar gráficos (spmv ou ilu0)",
     )
     args = parser.parse_args()
 

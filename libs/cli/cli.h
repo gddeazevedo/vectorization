@@ -5,6 +5,7 @@
 #include <cstring>
 #include <string>
 #include <spmv_benchmarks.h>
+#include <ilu0_benchmarks.h>
 
 class CLI {
 public:
@@ -19,5 +20,5 @@ private:
 
     void print_usage(const char *prog);
     int run_spmv();
-    int run_ilu();
+    int run_ilu0();
 };

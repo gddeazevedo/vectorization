@@ -26,17 +26,24 @@ add_library(spmv_benchmarks
 target_include_directories(spmv_benchmarks PUBLIC benchmarks/spmv) # where are the headers for spmv_benchmarks
 target_link_libraries(spmv_benchmarks PUBLIC bcsr bc_matvec utils) # where are the dependencies for spmv_benchmarks
 
+
+add_library(helpers
+    helpers/helpers.cpp
+)
+target_include_directories(helpers PUBLIC helpers) # where are the headers for helpers
+
+add_library(ilu0 ilu0/ilu0.cpp)
+target_include_directories(ilu0 PUBLIC ilu0) # where are the headers for ilu0
+target_link_libraries(ilu0 PUBLIC bcsr helpers) # where are the dependencies for ilu0
+
+# benchmarks/ilu0
+add_library(ilu0_benchmarks
+    benchmarks/ilu0/ilu0_benchmarks.cpp
+)
+target_include_directories(ilu0_benchmarks PUBLIC benchmarks/ilu0) # where are the headers for ilu0_benchmarks
+target_link_libraries(ilu0_benchmarks PUBLIC bcsr ilu0 utils) # where are the dependencies for ilu0_benchmarks
+
+
 add_library(cli cli/cli.cpp)
 target_include_directories(cli PUBLIC cli) # where are the headers for cli
-target_link_libraries(cli PUBLIC spmv_benchmarks) # where are the dependencies for cli
-
-add_library(ilu ilu/ilu.cpp)
-target_include_directories(ilu PUBLIC ilu) # where are the headers for ilu
-target_link_libraries(ilu PUBLIC bcsr) # where are the dependencies for ilu
-
-# benchmarks/ilu
-add_library(ilu_benchmarks
-    benchmarks/ilu/ilu_benchmarks.cpp
-)
-target_include_directories(ilu_benchmarks PUBLIC benchmarks/ilu) # where are the headers for ilu_benchmarks
-target_link_libraries(ilu_benchmarks PUBLIC ilu utils) # where are the dependencies for ilu_benchmarks
+target_link_libraries(cli PUBLIC spmv_benchmarks ilu0_benchmarks) # where are the dependencies for cli
