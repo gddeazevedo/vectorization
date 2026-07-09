@@ -2,35 +2,29 @@
 #include <cstdlib>
 #include <cstdio>
 
-double *invert_matrix(const double *M) {
-    double *inv = (double *) malloc(sizeof(double) * BS * BS);
-
+void invert_matrix(const double *M, double *M_inv) {
     double C00 = M[idx(1,1)] * M[idx(2,2)] - M[idx(1,2)] * M[idx(2,1)];
     double C01 = M[idx(1,2)] * M[idx(2,0)] - M[idx(1,0)] * M[idx(2,2)];
     double C02 = M[idx(1,0)] * M[idx(2,1)] - M[idx(1,1)] * M[idx(2,0)];
 
     double det = M[idx(0,0)] * C00 + M[idx(0,1)] * C01 + M[idx(0,2)] * C02;
 
-    inv[idx(0,0)] = C00;
-    inv[idx(1,0)] = C01;
-    inv[idx(2,0)] = C02;
-    inv[idx(0,1)] = M[idx(0,2)] * M[idx(2,1)] - M[idx(0,1)] * M[idx(2,2)];
-    inv[idx(1,1)] = M[idx(0,0)] * M[idx(2,2)] - M[idx(0,2)] * M[idx(2,0)];
-    inv[idx(2,1)] = M[idx(0,1)] * M[idx(2,0)] - M[idx(0,0)] * M[idx(2,1)];
-    inv[idx(0,2)] = M[idx(0,1)] * M[idx(1,2)] - M[idx(0,2)] * M[idx(1,1)];
-    inv[idx(1,2)] = M[idx(0,2)] * M[idx(1,0)] - M[idx(0,0)] * M[idx(1,2)];
-    inv[idx(2,2)] = M[idx(0,0)] * M[idx(1,1)] - M[idx(0,1)] * M[idx(1,0)];
+    M_inv[idx(0,0)] = C00;
+    M_inv[idx(1,0)] = C01;
+    M_inv[idx(2,0)] = C02;
+    M_inv[idx(0,1)] = M[idx(0,2)] * M[idx(2,1)] - M[idx(0,1)] * M[idx(2,2)];
+    M_inv[idx(1,1)] = M[idx(0,0)] * M[idx(2,2)] - M[idx(0,2)] * M[idx(2,0)];
+    M_inv[idx(2,1)] = M[idx(0,1)] * M[idx(2,0)] - M[idx(0,0)] * M[idx(2,1)];
+    M_inv[idx(0,2)] = M[idx(0,1)] * M[idx(1,2)] - M[idx(0,2)] * M[idx(1,1)];
+    M_inv[idx(1,2)] = M[idx(0,2)] * M[idx(1,0)] - M[idx(0,0)] * M[idx(1,2)];
+    M_inv[idx(2,2)] = M[idx(0,0)] * M[idx(1,1)] - M[idx(0,1)] * M[idx(1,0)];
 
     for (int i = 0; i < BS * BS; i++) {
-        inv[i] /= det;
+        M_inv[i] /= det;
     }
-
-    return inv;
 }
 
-double *matmat(const double *A, const double *B) {
-    double *C = (double *) calloc(BS * BS, sizeof(double));
-
+void matmat(const double *A, const double *B, double *C) {
     for (int i = 0; i < BS; i++) {
         for (int j = 0; j < BS; j++) {
             for (int k = 0; k < BS; k++) {
@@ -38,23 +32,21 @@ double *matmat(const double *A, const double *B) {
             }
         }
     }
-
-    return C;
 }
 
-double *matsub(const double *A, const double *B) {
-    double *C = (double *) calloc(BS * BS, sizeof(double));
-
+void matsub(const double *A, const double *B, double *C) {
     for (int i = 0; i < BS; i++) {
         for (int j = 0; j < BS; j++) {
             C[idx(i,j)] = A[idx(i,j)] - B[idx(i,j)];
         }
     }
-
-    return C;
 }
 
 void ilu0_decomposition(BlockedCSR *A) {
+    double *prod = (double *) calloc(BS * BS, sizeof(double));
+    double *diff = (double *) calloc(BS * BS, sizeof(double));
+    double *inv  = (double *) calloc(BS * BS, sizeof(double));
+
     for (int i = 0; i < A->nb; i++) {
         int row_start = A->ia[i];
         int row_end   = A->ia[i + 1];
@@ -78,12 +70,11 @@ void ilu0_decomposition(BlockedCSR *A) {
                 allocated_diag = true;
             }
 
-            double *inv   = invert_matrix(diag_kk);
-            double *prod  = matmat(block_ik, inv);
+            invert_matrix(diag_kk, inv);
+            matmat(block_ik, inv, prod);
             memcpy(block_ik, prod, sizeof(double) * A->bs * A->bs);
+            memset(prod, 0, sizeof(double) * BS * BS);
 
-            free(inv);
-            free(prod);
             if (allocated_diag) {
                 free(diag_kk);
             }
@@ -98,14 +89,17 @@ void ilu0_decomposition(BlockedCSR *A) {
                 }
 
                 double *block_ij = &A->vals[(size_t)q * A->bs * A->bs];
-                double *prod     = matmat(block_ik, block_kj);
-                double *diff     = matsub(block_ij, prod);
+                matmat(block_ik, block_kj, prod);
+                matsub(block_ij, prod, diff);
+                memset(prod, 0, sizeof(double) * BS * BS);
                 memcpy(block_ij, diff, sizeof(double) * A->bs * A->bs);
-                free(prod);
-                free(diff);
             }
         }
     }
+
+    free(prod);
+    free(diff);
+    free(inv);
 }
 
 

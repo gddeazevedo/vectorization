@@ -144,7 +144,7 @@ double *get_block(const BlockedCSR *A, int row, int col) {
     int row_end   = A->ia[row + 1];
 
     for (int p = row_start; p < row_end; p++) {
-        if (A->ja[p] == row) {
+        if (A->ja[p] == col) {
             return &A->vals[(size_t)p * A->bs * A->bs];
         }
     }
