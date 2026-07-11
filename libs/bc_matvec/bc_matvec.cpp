@@ -175,28 +175,28 @@ void bc_matvec_hwy_256(const BlockedCSR * __restrict__ A, const double * __restr
         const int row_end   = A->ia[row + 1];
         double* yrow = &y[(size_t)row * bs];
 
-        auto acc0 = hn::Zero(d);
-        auto acc1 = hn::Zero(d);
-        auto acc2 = hn::Zero(d);
+        auto y0 = hn::Zero(d);
+        auto y1 = hn::Zero(d);
+        auto y2 = hn::Zero(d);
 
-        for (int bi = row_start; bi < row_end; bi++) {
-            const int bc = A->ja[bi];
-            const double* block = &A->vals[(size_t)bi * bs * bs];
-            const double* xcol  = &x[(size_t)bc * bs];
+        for (int block_idx = row_start; block_idx < row_end; block_idx++) {
+            const int block_col = A->ja[block_idx];
+            const double* block = &A->vals[(size_t)block_idx * bs * bs];
+            const double* xcol  = &x[(size_t)block_col * bs];
 
             auto vx  = hn::MaskedLoad(m3, d, xcol);
-            auto vr0 = hn::MaskedLoad(m3, d, block);
-            auto vr1 = hn::MaskedLoad(m3, d, block + 3);
-            auto vr2 = hn::MaskedLoad(m3, d, block + 6);
+            auto vb0 = hn::MaskedLoad(m3, d, block);
+            auto vb1 = hn::MaskedLoad(m3, d, block + 3);
+            auto vb2 = hn::MaskedLoad(m3, d, block + 6);
 
-            acc0 = hn::MulAdd(vr0, vx, acc0);
-            acc1 = hn::MulAdd(vr1, vx, acc1);
-            acc2 = hn::MulAdd(vr2, vx, acc2);
+            y0 = hn::MulAdd(vb0, vx, y0);
+            y1 = hn::MulAdd(vb1, vx, y1);
+            y2 = hn::MulAdd(vb2, vx, y2);
         }
 
-        yrow[0] = hn::ReduceSum(d, acc0);
-        yrow[1] = hn::ReduceSum(d, acc1);
-        yrow[2] = hn::ReduceSum(d, acc2);
+        yrow[0] = hn::ReduceSum(d, y0);
+        yrow[1] = hn::ReduceSum(d, y1);
+        yrow[2] = hn::ReduceSum(d, y2);
     }
 }
 
