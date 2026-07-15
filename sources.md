@@ -6,3 +6,4 @@
 - [Algorithms for Modern Hardware](https://en.algorithmica.org/hpc/)
 - [Highway C++](https://google.github.io/highway/en/master/index.html)
 - [Highway C++ (Quick Reference)](https://google.github.io/highway/en/master/quick_reference.html)
+- [MATLAB ILU Docs](https://www.mathworks.com/help/matlab/ref/ilu.html)
