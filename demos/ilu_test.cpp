@@ -136,11 +136,7 @@ void test_block_ilu0() {
                     continue; // U(k,j) = 0 para k > j
                 }
 
-                memset(prod, 0, sizeof(prod));
-                matmat(L_ik, U_kj, prod);
-                for (int s = 0; s < bs * bs; s++) {
-                    lu_block[s] += prod[s];
-                }
+                matmat(L_ik, U_kj, lu_block);
             }
 
             // Compara com original
