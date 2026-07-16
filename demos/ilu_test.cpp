@@ -142,14 +142,14 @@ void test_block_ilu0() {
             // Compara com original
             for (int r = 0; r < bs; r++) {
                 for (int c = 0; c < bs; c++) {
-                    double err = fabs(orig_block[r * bs + c] - lu_block[r * bs + c]);
+                    double err = (fabs(orig_block[r * bs + c] - lu_block[r * bs + c])) / (fabs(orig_block[r * bs + c]) + 1e-12);
                     if (err > max_err) max_err = err;
                 }
             }
         }
     }
 
-    printf("Erro maximo (L*U vs A nos blocos existentes): %e\n", max_err);
+    printf("Erro maximo relativo (L*U vs A nos blocos existentes): %e\n", max_err);
     if (max_err < 1e-10) {
         printf("TESTE OK\n");
     } else {
