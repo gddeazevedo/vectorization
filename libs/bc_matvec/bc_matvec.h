@@ -12,13 +12,14 @@
 
 namespace hn = hwy::HWY_NAMESPACE;
 
-using bc_matvec_func_t = void (*)(const BlockedCSR * __restrict__, const double * __restrict__, double * __restrict__);
+using bc_matvec_func_t = void (*)(const BlockedCSR &, const double * __restrict__, double * __restrict__);
 
 static double hadd_256(__m256d v);
 
-void bc_matvec(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_omp(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_hwy_256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_hwy_512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_omp(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_avx256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_avx512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy_256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy_512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy_scalable(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);

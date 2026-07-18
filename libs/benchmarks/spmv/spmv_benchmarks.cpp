@@ -22,7 +22,7 @@ void SpmvBenchmark::evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv) 
            nx, ny, nz, N, 3*N, K);
     print_separator('=', TABLE_WIDTH);
 
-    BlockedCSR *A = generate_blocked27_3x3(nx, ny, nz);
+    BlockedCSR A = BlockedCSR::generate_blocked27_3x3(nx, ny, nz);
 
     double *x      = (double *)malloc((size_t)3 * N * sizeof(double));
     double *y_ref  = (double *)malloc((size_t)3 * N * sizeof(double));
@@ -103,7 +103,6 @@ void SpmvBenchmark::evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv) 
     free(x);
     free(y_ref);
     free(y_test);
-    bc_free(A);
 }
 
 

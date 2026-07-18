@@ -1,22 +1,22 @@
 #include <bc_matvec.h>
 
-void bc_matvec(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    int bs = A->bs;
+void bc_matvec(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A.bs;
 
-    for (int i = 0; i < A->nb * bs; i++) {
+    for (int i = 0; i < A.nb * bs; i++) {
         y[i] = 0.0;
     }
 
-    for (int row = 0; row < A->nb; row++) {
-        int row_start = A->ia[row];
-        int row_end   = A->ia[row + 1];
+    for (int row = 0; row < A.nb; row++) {
+        int row_start = A.ia[row];
+        int row_end   = A.ia[row + 1];
 
         double *yrow = &y[row * bs];
 
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            int block_col = A->ja[block_idx];
+            int block_col = A.ja[block_idx];
 
-            const double *block = &A->vals[block_idx * bs * bs];
+            const double *block = &A.vals[block_idx * bs * bs];
             const double *xcol  = &x[block_col * bs];
 
             yrow[0] += block[0]*xcol[0] + block[1]*xcol[1] + block[2]*xcol[2];
@@ -26,16 +26,16 @@ void bc_matvec(const BlockedCSR * __restrict__ A, const double * __restrict__ x,
     }
 }
 
-void bc_matvec_omp(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    int bs = A->bs;
+void bc_matvec_omp(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A.bs;
 
-    for (int i = 0; i < A->nb * bs; i++) {
+    for (int i = 0; i < A.nb * bs; i++) {
         y[i] = 0.0;
     }
 
-    for (int row = 0; row < A->nb; row++) {
-        int row_start = A->ia[row];
-        int row_end   = A->ia[row + 1];
+    for (int row = 0; row < A.nb; row++) {
+        int row_start = A.ia[row];
+        int row_end   = A.ia[row + 1];
 
         double *yrow = &y[row * bs];
 
@@ -45,10 +45,10 @@ void bc_matvec_omp(const BlockedCSR * __restrict__ A, const double * __restrict_
 
         #pragma omp simd reduction(+:y0,y1,y2) simdlen(3)
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            int block_col      = A->ja[block_idx];
+            int block_col = A.ja[block_idx];
 
-            const double *block  = &A->vals[block_idx * bs * bs];
-            const double *xcol = &x[block_col * bs];
+            const double *block = &A.vals[block_idx * bs * bs];
+            const double *xcol  = &x[block_col * bs];
 
             y0 += block[0]*xcol[0] + block[1]*xcol[1] + block[2]*xcol[2];
             y1 += block[3]*xcol[0] + block[4]*xcol[1] + block[5]*xcol[2];
@@ -76,16 +76,16 @@ static double hadd_256(__m256d v) {
     return _mm_cvtsd_f64(final_sum);
 }
 
-void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    int bs = A->bs;
+void bc_matvec_avx256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A.bs;
 
-    for (int i = 0; i < A->nb * bs; i++) {
+    for (int i = 0; i < A.nb * bs; i++) {
         y[i] = 0.0;
     }
    
-    for (int row = 0; row < A->nb; row++) {
-        int row_start = A->ia[row];
-        int row_end   = A->ia[row + 1];
+    for (int row = 0; row < A.nb; row++) {
+        int row_start = A.ia[row];
+        int row_end   = A.ia[row + 1];
 
         double *yrow = &y[(size_t)row * bs];
 
@@ -94,9 +94,10 @@ void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restri
         __m256d y2 = _mm256_setzero_pd();
 
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            int block_col = A->ja[block_idx];
-            const double *block  = &A->vals[(size_t)block_idx * bs * bs];
-            const double *xcol = &x[(size_t)block_col * bs];
+            int block_col = A.ja[block_idx];
+
+            const double *block = &A.vals[(size_t)block_idx * bs * bs];
+            const double *xcol  = &x[(size_t)block_col * bs];
 
             __m256d vx = _mm256_loadu_pd(xcol);
             
@@ -117,10 +118,10 @@ void bc_matvec_avx256(const BlockedCSR * __restrict__ A, const double * __restri
 }
 
 
-void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    int bs = A->bs;
+void bc_matvec_avx512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A.bs;
 
-    for (int i = 0; i < A->nb * bs; i++) {
+    for (int i = 0; i < A.nb * bs; i++) {
         y[i] = 0.0;
     }
 
@@ -128,9 +129,9 @@ void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restri
     // [x0, x1, x2, x0, x1, x2, x0, x1]
     __m512i perm_idx = _mm512_set_epi64(1, 0, 2, 1, 0, 2, 1, 0);
 
-    for (int row = 0; row < A->nb; row++) {
-        int row_start = A->ia[row];
-        int row_end   = A->ia[row + 1];
+    for (int row = 0; row < A.nb; row++) {
+        int row_start = A.ia[row];
+        int row_end   = A.ia[row + 1];
 
         double *yrow = &y[(size_t)row * bs];
 
@@ -138,8 +139,8 @@ void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restri
         double y2_extra = 0.0;
 
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            int block_col = A->ja[block_idx];
-            const double *block = &A->vals[(size_t)block_idx * bs * bs];
+            int block_col = A.ja[block_idx];
+            const double *block = &A.vals[(size_t)block_idx * bs * bs];
             const double *xcol = &x[(size_t)block_col * bs];
 
            
@@ -160,19 +161,19 @@ void bc_matvec_avx512(const BlockedCSR * __restrict__ A, const double * __restri
     }
 }
 
-void bc_matvec_hwy_256(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    const int bs = A->bs;
+void bc_matvec_hwy_256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    const int bs = A.bs;
 
     const hn::FixedTag<double, 4> d;  // 256-bit fixo: 4 lanes
     const auto m3 = hn::FirstN(d, 3);
 
-    for (int i = 0; i < A->nb * bs; i++) {
+    for (int i = 0; i < A.nb * bs; i++) {
         y[i] = 0.0;
     }
 
-    for (int row = 0; row < A->nb; row++) {
-        const int row_start = A->ia[row];
-        const int row_end   = A->ia[row + 1];
+    for (int row = 0; row < A.nb; row++) {
+        const int row_start = A.ia[row];
+        const int row_end   = A.ia[row + 1];
         double* yrow = &y[(size_t)row * bs];
 
         auto y0 = hn::Zero(d);
@@ -180,8 +181,8 @@ void bc_matvec_hwy_256(const BlockedCSR * __restrict__ A, const double * __restr
         auto y2 = hn::Zero(d);
 
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            const int block_col = A->ja[block_idx];
-            const double* block = &A->vals[(size_t)block_idx * bs * bs];
+            const int block_col = A.ja[block_idx];
+            const double* block = &A.vals[(size_t)block_idx * bs * bs];
             const double* xcol  = &x[(size_t)block_col * bs];
 
             auto vx  = hn::MaskedLoad(m3, d, xcol);
@@ -200,8 +201,8 @@ void bc_matvec_hwy_256(const BlockedCSR * __restrict__ A, const double * __restr
     }
 }
 
-void bc_matvec_hwy_512(const BlockedCSR * __restrict__ A, const double * __restrict__ x, double * __restrict__ y) {
-    int bs = A->bs;
+void bc_matvec_hwy_512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A.bs;
 
     const hn::FixedTag<double, 8> d;
     const hn::Rebind<int64_t, decltype(d)> di;
@@ -209,13 +210,13 @@ void bc_matvec_hwy_512(const BlockedCSR * __restrict__ A, const double * __restr
     HWY_ALIGN const int64_t perm_lanes[8] = {0,1,2, 0,1,2, 0,1};
     const auto perm_idx = hn::IndicesFromVec(d, hn::Load(di, perm_lanes));
 
-    for (int i = 0; i < A->nb * bs; i++) {
+    for (int i = 0; i < A.nb * bs; i++) {
         y[i] = 0.0;
     }
 
-    for (int row = 0; row < A->nb; row++) {
-        int row_start = A->ia[row];
-        int row_end   = A->ia[row + 1];
+    for (int row = 0; row < A.nb; row++) {
+        int row_start = A.ia[row];
+        int row_end   = A.ia[row + 1];
 
         double *yrow = &y[(size_t) row * bs];
 
@@ -223,9 +224,56 @@ void bc_matvec_hwy_512(const BlockedCSR * __restrict__ A, const double * __restr
         double y2_extra = 0.0;
 
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            int block_col = A->ja[block_idx];
+            int block_col = A.ja[block_idx];
 
-            const double *block = &A->vals[(size_t)block_idx * bs * bs];
+            const double *block = &A.vals[(size_t)block_idx * bs * bs];
+            const double *xcol  = &x[(size_t)block_col * bs];
+
+            auto v_block    = hn::LoadU(d, block);
+            auto v_xcol_raw = hn::LoadU(d, xcol);
+            auto v_xcol     = hn::TableLookupLanes(v_xcol_raw, perm_idx);
+
+            acc = hn::MulAdd(v_block, v_xcol, acc);
+            y2_extra += block[8] * xcol[2];
+        }
+
+        const auto m_first_3 = hn::FirstN(d, 3);
+        const auto m_first_6 = hn::FirstN(d, 6);
+        const auto m_mid_3   = hn::AndNot(m_first_3, m_first_6);
+        const auto m_last_2  = hn::Not(m_first_6);
+
+        yrow[0] = hn::MaskedReduceSum(d, m_first_3, acc);
+        yrow[1] = hn::MaskedReduceSum(d, m_mid_3,   acc);
+        yrow[2] = hn::MaskedReduceSum(d, m_last_2,  acc) + y2_extra;
+    }
+}
+
+void bc_matvec_hwy_scalable(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+    int bs = A.bs;
+
+    const hn::ScalableTag<double> d;
+    const hn::Rebind<int64_t, decltype(d)> di;
+
+    HWY_ALIGN const int64_t perm_lanes[8] = {0,1,2, 0,1,2, 0,1};
+    const auto perm_idx = hn::IndicesFromVec(d, hn::Load(di, perm_lanes));
+
+    for (int i = 0; i < A.nb * bs; i++) {
+        y[i] = 0.0;
+    }
+
+    for (int row = 0; row < A.nb; row++) {
+        int row_start = A.ia[row];
+        int row_end   = A.ia[row + 1];
+
+        double *yrow = &y[(size_t) row * bs];
+
+        auto acc = hn::Set(d, 0.0);
+        double y2_extra = 0.0;
+
+        for (int block_idx = row_start; block_idx < row_end; block_idx++) {
+            int block_col = A.ja[block_idx];
+
+            const double *block = &A.vals[(size_t)block_idx * bs * bs];
             const double *xcol  = &x[(size_t)block_col * bs];
 
             auto v_block    = hn::LoadU(d, block);

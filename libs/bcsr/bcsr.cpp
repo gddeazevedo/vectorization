@@ -1,66 +1,80 @@
 #include <bcsr.h>
 
-BlockedCSR *bc_alloc(int nb, int bs, int max_nblocks) {
-    BlockedCSR *A = (BlockedCSR *) malloc(sizeof(BlockedCSR));
+BlockedCSR::BlockedCSR(int nb, int bs, int max_nblocks)
+    : nb(nb), bs(bs), nnzb(0)
+{
+    this->ia   = (int *) malloc((nb + 1) * sizeof(int));
+    this->ja   = (int *) malloc(max_nblocks * sizeof(int));
+    this->vals = (double *) malloc(max_nblocks * bs * bs * sizeof(double));
 
-    if (!A) {
-        perror("malloc A");
-        exit(1);
-    }
-
-    A->nb = nb;
-    A->bs = bs;
-    A->nnzb = 0;
-    A->ia   = (int *) malloc((nb + 1) * sizeof(int));
-    A->ja   = (int *) malloc(max_nblocks * sizeof(int));
-    A->vals = (double *) malloc(max_nblocks * bs * bs * sizeof(double));
-
-    if (!A->ia || !A->ja || !A->vals) {
+    if (!this->ia || !this->ja || !this->vals) {
         perror("malloc arrays");
         exit(1);
     }
 
-    A->ia[0] = 0;
-    return A;
+    this->ia[0] = 0;
 }
 
-void bc_shrink_to_fit(BlockedCSR *A) {
-    A->ja   = (int *) realloc(A->ja, A->nnzb * sizeof(int));
-    A->vals = (double *) realloc(A->vals, A->nnzb * A->bs * A->bs * sizeof(double));
+BlockedCSR::~BlockedCSR() {
+    free(this->ia);
+    free(this->ja);
+    free(this->vals);
 }
 
-void bc_free(BlockedCSR *A) {
-    if (!A) {
-        return;
+BlockedCSR::BlockedCSR(BlockedCSR &&other) noexcept
+    : nb(other.nb), bs(other.bs), nnzb(other.nnzb),
+      ia(other.ia), ja(other.ja), vals(other.vals)
+{
+    other.ia   = nullptr;
+    other.ja   = nullptr;
+    other.vals = nullptr;
+}
+
+BlockedCSR &BlockedCSR::operator=(BlockedCSR &&other) noexcept {
+    if (this != &other) {
+        free(this->ia);
+        free(this->ja);
+        free(this->vals);
+
+        this->nb = other.nb;
+        this->bs = other.bs;
+        this->nnzb = other.nnzb;
+        this->ia = other.ia;
+        this->ja = other.ja;
+        this->vals = other.vals;
+
+        other.ia = nullptr;
+        other.ja = nullptr;
+        other.vals = nullptr;
     }
-
-    free(A->ia);
-    free(A->ja);
-    free(A->vals);
-    free(A);
+    return *this;
 }
 
-void bc_push_block(BlockedCSR *A, int brow, int bcol, const double *block) {
-    int bs = A->bs;
-    int pos = A->nnzb;
-    A->ja[pos] = bcol;
-    memcpy(&A->vals[(size_t)pos * bs * bs], block, (size_t)bs * bs * sizeof(double));
-    A->nnzb++;
-    A->ia[brow + 1] = A->nnzb;
+void BlockedCSR::shrink_to_fit() {
+    this->ja   = (int *) realloc(this->ja, this->nnzb * sizeof(int));
+    this->vals = (double *) realloc(this->vals, this->nnzb * this->bs * this->bs * sizeof(double));
 }
 
-BlockedCSR *generate_blocked27_3x3(int nx, int ny, int nz) {
+void BlockedCSR::push_block(int brow, int bcol, const double *block) {
+    int pos = this->nnzb;
+    this->ja[pos] = bcol;
+    memcpy(&this->vals[(size_t)pos * this->bs * this->bs], block, (size_t)this->bs * this->bs * sizeof(double));
+    this->nnzb++;
+    this->ia[brow + 1] = this->nnzb;
+}
+
+BlockedCSR BlockedCSR::generate_blocked27_3x3(int nx, int ny, int nz) {
     int N = nx * ny * nz;
     int bs = 3;
     int max_blocks = N * 27;
-    BlockedCSR *A = bc_alloc(N, bs, max_blocks);
+    BlockedCSR A(N, bs, max_blocks);
 
     int nnz_count = 0;
     for (int k = 0; k < nz; k++) {
         for (int j = 0; j < ny; j++) {
             for (int i = 0; i < nx; i++) {
                 int id = i + j * nx + k * nx * ny;
-                A->ia[id] = nnz_count;
+                A.ia[id] = nnz_count;
 
                 for (int dk = -1; dk <= 1; dk++) {
                     for (int dj = -1; dj <= 1; dj++) {
@@ -78,33 +92,31 @@ BlockedCSR *generate_blocked27_3x3(int nx, int ny, int nz) {
                             } else {
                                 for (int r = 0; r < 9; r++) blk[r] = 0.05;
                             }
-                            bc_push_block(A, id, nid, blk);
+                            A.push_block(id, nid, blk);
                             nnz_count++;
                         }
                     }
                 }
 
-                A->ia[id + 1] = nnz_count;
+                A.ia[id + 1] = nnz_count;
             }
         }
     }
 
-    A->nnzb = nnz_count;
-    bc_shrink_to_fit(A);
+    A.nnzb = nnz_count;
+    A.shrink_to_fit();
     return A;
 }
 
-void bc_draw(const BlockedCSR *A) {
-    int nb = A->nb;
-
-    for(int i = 0; i < nb; i++) {
-        for(int j = 0; j < nb; j++) {
+void BlockedCSR::draw() const {
+    for(int i = 0; i < this->nb; i++) {
+        for(int j = 0; j < this->nb; j++) {
             bool is_block = false;
-            int row_start = A->ia[i];
-            int row_end   = A->ia[i + 1];
+            int row_start = this->ia[i];
+            int row_end   = this->ia[i + 1];
 
             for(int idx = row_start; idx < row_end; idx++) {
-                if(j == A->ja[idx]) {
+                if(j == this->ja[idx]) {
                     printf("[X]");
                     is_block = true;
                     break;

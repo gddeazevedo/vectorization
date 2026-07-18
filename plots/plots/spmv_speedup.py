@@ -4,12 +4,13 @@ import numpy as np
 
 
 COLORS = {
-    "Base":       "#6c757d",
-    "OpenMP":     "#dc3545",
-    "AVX256":     "#0d6efd",
-    "AVX512":     "#fd7e14",
-    "Highway256": "#17E110",
-    "Highway512": "#58309C",
+    "Base":        "#6c757d",
+    "OpenMP":      "#dc3545",
+    "AVX256":      "#0d6efd",
+    "AVX512":      "#fd7e14",
+    "Highway256":  "#17E110",
+    "Highway512":  "#58309C",
+    "HighwayScal": "#E1C317",
 }
 
 COMPILER_COLORS = {
