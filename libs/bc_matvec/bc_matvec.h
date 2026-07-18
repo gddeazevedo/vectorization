@@ -20,6 +20,5 @@ void bc_matvec(const BlockedCSR &A, const double * __restrict__ x, double * __re
 void bc_matvec_omp(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
 void bc_matvec_avx256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
 void bc_matvec_avx512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_hwy_256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_hwy_512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
-void bc_matvec_hwy_scalable(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);
+void bc_matvec_hwy512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y);

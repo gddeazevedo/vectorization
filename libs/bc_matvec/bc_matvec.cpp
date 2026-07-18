@@ -161,7 +161,7 @@ void bc_matvec_avx512(const BlockedCSR &A, const double * __restrict__ x, double
     }
 }
 
-void bc_matvec_hwy_256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void bc_matvec_hwy256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     const int bs = A.bs;
 
     const hn::FixedTag<double, 4> d;  // 256-bit fixo: 4 lanes
@@ -201,57 +201,10 @@ void bc_matvec_hwy_256(const BlockedCSR &A, const double * __restrict__ x, doubl
     }
 }
 
-void bc_matvec_hwy_512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void bc_matvec_hwy512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A.bs;
 
     const hn::FixedTag<double, 8> d;
-    const hn::Rebind<int64_t, decltype(d)> di;
-
-    HWY_ALIGN const int64_t perm_lanes[8] = {0,1,2, 0,1,2, 0,1};
-    const auto perm_idx = hn::IndicesFromVec(d, hn::Load(di, perm_lanes));
-
-    for (int i = 0; i < A.nb * bs; i++) {
-        y[i] = 0.0;
-    }
-
-    for (int row = 0; row < A.nb; row++) {
-        int row_start = A.ia[row];
-        int row_end   = A.ia[row + 1];
-
-        double *yrow = &y[(size_t) row * bs];
-
-        auto acc = hn::Set(d, 0.0);
-        double y2_extra = 0.0;
-
-        for (int block_idx = row_start; block_idx < row_end; block_idx++) {
-            int block_col = A.ja[block_idx];
-
-            const double *block = &A.vals[(size_t)block_idx * bs * bs];
-            const double *xcol  = &x[(size_t)block_col * bs];
-
-            auto v_block    = hn::LoadU(d, block);
-            auto v_xcol_raw = hn::LoadU(d, xcol);
-            auto v_xcol     = hn::TableLookupLanes(v_xcol_raw, perm_idx);
-
-            acc = hn::MulAdd(v_block, v_xcol, acc);
-            y2_extra += block[8] * xcol[2];
-        }
-
-        const auto m_first_3 = hn::FirstN(d, 3);
-        const auto m_first_6 = hn::FirstN(d, 6);
-        const auto m_mid_3   = hn::AndNot(m_first_3, m_first_6);
-        const auto m_last_2  = hn::Not(m_first_6);
-
-        yrow[0] = hn::MaskedReduceSum(d, m_first_3, acc);
-        yrow[1] = hn::MaskedReduceSum(d, m_mid_3,   acc);
-        yrow[2] = hn::MaskedReduceSum(d, m_last_2,  acc) + y2_extra;
-    }
-}
-
-void bc_matvec_hwy_scalable(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
-    int bs = A.bs;
-
-    const hn::ScalableTag<double> d;
     const hn::Rebind<int64_t, decltype(d)> di;
 
     HWY_ALIGN const int64_t perm_lanes[8] = {0,1,2, 0,1,2, 0,1};
