@@ -31,7 +31,7 @@ void Ilu0Benchmark::evaluate_ilu0(int nx, int ny, int nz, FILE *runs_csv) {
     memcpy(orig_vals, A.vals, vals_size);
 
     // Resultado de referência (variante base)
-    variants[0].func(A);
+    ilu0_decomposition(A);
     memcpy(ref_vals, A.vals, vals_size);
 
     double *sample = (double *)malloc(K * sizeof(double));
