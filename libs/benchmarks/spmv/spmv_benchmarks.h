@@ -1,7 +1,6 @@
 #pragma once
 
-#include <utils.h>
-#include <bcsr.h>
+#include <benchmark_base.h>
 #include <spmv.h>
 
 struct MatvecVariant {
@@ -9,14 +8,8 @@ struct MatvecVariant {
     spmv_func_t func;
 };
 
-class SpmvBenchmark {
+class SpmvBenchmark : public BenchmarkBase {
     private:
-        FILE *output_file;
-        int ini, fim, inc, K;
-        std::string compiler;
-        std::vector<double> gs_mean;
-        std::vector<double> gs_median;
-        int gs_count = 0;
         const std::vector<MatvecVariant> variants = {
             {"Base",        spmv},
             {"OpenMP",      spmv_omp},
@@ -26,9 +19,12 @@ class SpmvBenchmark {
             {"Highway512",  spmv_hwy512}
         };
 
-        void evaluate_spmvs(int nx, int ny, int nz, FILE *runs_csv);
+        void evaluate(int nx, int ny, int nz, FILE *runs_csv) override;
+        const char *benchmark_name() const override;
+        const char *csv_prefix() const override;
+        int variant_count() const override;
+        const std::string &variant_name(int v) const override;
 
     public:
         SpmvBenchmark(int ini, int fim, int inc, int K, const std::string &compiler);
-        int run();
 };

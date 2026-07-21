@@ -1,22 +1,17 @@
 #pragma once
 
-#include <utils.h>
-#include <bcsr.h>
+#include <benchmark_base.h>
 #include <ilu0.h>
 
+using ilu0_func_t = void (*)(BlockedCSR &);
 
 struct Ilu0Variant {
     const std::string name;
     ilu0_func_t func;
 };
 
-class Ilu0Benchmark {
+class Ilu0Benchmark : public BenchmarkBase {
     private:
-        int ini, fim, inc, K;
-        std::string compiler;
-        std::vector<double> gs_mean;
-        std::vector<double> gs_median;
-        int gs_count = 0;
         const std::vector<Ilu0Variant> variants = {
             {"Base",        ilu0_decomposition},
             {"OpenMP",      ilu0_decomposition_omp},
@@ -26,9 +21,12 @@ class Ilu0Benchmark {
             {"Highway512",  ilu0_decomposition_hwy512}
         };
 
-        void evaluate_ilu0(int nx, int ny, int nz, FILE *runs_csv);
+        void evaluate(int nx, int ny, int nz, FILE *runs_csv) override;
+        const char *benchmark_name() const override;
+        const char *csv_prefix() const override;
+        int variant_count() const override;
+        const std::string &variant_name(int v) const override;
 
     public:
         Ilu0Benchmark(int ini, int fim, int inc, int K, const std::string &compiler);
-        int run();
 };

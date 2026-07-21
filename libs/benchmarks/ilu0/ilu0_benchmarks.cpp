@@ -1,17 +1,25 @@
 #include <ilu0_benchmarks.h>
 
-Ilu0Benchmark::Ilu0Benchmark(int ini, int fim, int inc, int K, const std::string &compiler) {
-    this->ini = ini;
-    this->fim = fim;
-    this->inc = inc;
-    this->K   = K;
-    this->compiler = compiler;
+Ilu0Benchmark::Ilu0Benchmark(int ini, int fim, int inc, int K, const std::string &compiler)
+    : BenchmarkBase(ini, fim, inc, K, compiler) {}
 
-    this->gs_mean   = std::vector<double>(variants.size(), 0.0);
-    this->gs_median = std::vector<double>(variants.size(), 0.0);
+const char *Ilu0Benchmark::benchmark_name() const {
+    return "ILU0 Benchmark";
 }
 
-void Ilu0Benchmark::evaluate_ilu0(int nx, int ny, int nz, FILE *runs_csv) {
+const char *Ilu0Benchmark::csv_prefix() const {
+    return "ilu0";
+}
+
+int Ilu0Benchmark::variant_count() const {
+    return (int)variants.size();
+}
+
+const std::string &Ilu0Benchmark::variant_name(int v) const {
+    return variants[v].name;
+}
+
+void Ilu0Benchmark::evaluate(int nx, int ny, int nz, FILE *runs_csv) {
     int N = nx * ny * nz;
 
     constexpr int TABLE_WIDTH = 92;
@@ -59,7 +67,6 @@ void Ilu0Benchmark::evaluate_ilu0(int nx, int ny, int nz, FILE *runs_csv) {
         means[v]   = sum / K;
         medians[v] = median(sample, K);
 
-        // Erro relativo máximo contra a referência
         double max_err = 0.0;
         int total_vals = A.nnzb * A.bs * A.bs;
         for (int i = 0; i < total_vals; i++) {
@@ -109,75 +116,4 @@ void Ilu0Benchmark::evaluate_ilu0(int nx, int ny, int nz, FILE *runs_csv) {
     free(sample);
     free(orig_vals);
     free(ref_vals);
-}
-
-
-int Ilu0Benchmark::run() {
-    if (ini <= 0 || fim < ini || inc <= 0 || K <= 0) {
-        printf("Parâmetros inválidos.\n");
-        return 1;
-    }
-
-    constexpr int SUMMARY_WIDTH = 64;
-
-    std::string compiler_dir;
-
-    ensure_experiment_dirs(compiler, compiler_dir);
-
-    std::string ilu0_runs = build_path(compiler_dir, "ilu0_runs.csv");
-    FILE *runs_csv = fopen(ilu0_runs.c_str(), "w");
-    fprintf(runs_csv, "N,nx,ny,nz,variante,media_s,speedup_mean,mediana_s,speedup_median,erro_max\n");
-
-    printf("\n");
-    print_separator('#', SUMMARY_WIDTH);
-    printf("#%*s%*s#\n",
-           (SUMMARY_WIDTH - 2) / 2 + 13, "ILU0 Benchmark",
-           (SUMMARY_WIDTH - 2) / 2 - 13, "");
-    print_separator('#', SUMMARY_WIDTH);
-    printf("  Compilador : %s\n", compiler.c_str());
-    printf("  Malhas     : %d → %d (passo %d)\n", ini, fim, inc);
-    printf("  Iterações  : %d por variante\n", K);
-    printf("  Variantes  : %zu\n", variants.size());
-    print_separator('#', SUMMARY_WIDTH);
-
-    for (int nx = ini; nx <= fim; nx += inc) {
-        evaluate_ilu0(nx, nx, nx, runs_csv);
-    }
-
-    fclose(runs_csv);
-
-    printf("\n");
-    print_separator('=', SUMMARY_WIDTH);
-    printf("  Speedup Geral (média harmônica sobre %d malhas)\n", gs_count);
-    print_separator('=', SUMMARY_WIDTH);
-    printf("  %-18s %18s %18s\n", "Variante", "Speedup (Mean)", "Speedup (Median)");
-    print_separator('-', SUMMARY_WIDTH);
-
-    ensure_experiment_dirs(compiler, compiler_dir);
-    std::string ilu0_general = build_path(compiler_dir, "ilu0_general.csv");
-
-    FILE *speedup_csv = fopen(ilu0_general.c_str(), "w");
-    fprintf(speedup_csv, "variante,speedup_geral_mean,speedup_geral_median\n");
-
-    for (int v = 0; v < (int)variants.size(); v++) {
-        double speedup_mean   = gs_count / gs_mean[v];
-        double speedup_median = gs_count / gs_median[v];
-
-        printf("  %-18s %17.2fx %17.2fx\n",
-               variants[v].name.c_str(),
-               speedup_mean,
-               speedup_median);
-
-        fprintf(speedup_csv, "%s,%.4f,%.4f\n",
-                variants[v].name.c_str(),
-                speedup_mean,
-                speedup_median);
-    }
-
-    print_separator('=', SUMMARY_WIDTH);
-    printf("\n");
-
-    fclose(speedup_csv);
-
-    return 0;
 }

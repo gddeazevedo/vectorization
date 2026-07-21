@@ -25,6 +25,7 @@ target_link_libraries(vectorization
     ilu0
     utils
     block_matrix_ops
+    benchmark_base
     OpenMP::OpenMP_CXX
     hwy
 ) # where are the dependencies for the main executable
