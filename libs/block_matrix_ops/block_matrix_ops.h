@@ -8,6 +8,7 @@ namespace hn = hwy::HWY_NAMESPACE;
 
 
 #define BS 3
+#define idx(i,j) ((i)*BS + (j))
 
 void invert_3x3_matrix(double *dst_matrix, const double *M);
 
