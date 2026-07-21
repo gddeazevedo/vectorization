@@ -1,6 +1,6 @@
-#include <bc_matvec.h>
+#include <spmv.h>
 
-void bc_matvec(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void spmv(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A.bs;
 
     for (int i = 0; i < A.nb * bs; i++) {
@@ -26,7 +26,7 @@ void bc_matvec(const BlockedCSR &A, const double * __restrict__ x, double * __re
     }
 }
 
-void bc_matvec_omp(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void spmv_omp(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A.bs;
 
     for (int i = 0; i < A.nb * bs; i++) {
@@ -76,7 +76,7 @@ static double hadd_256(__m256d v) {
     return _mm_cvtsd_f64(final_sum);
 }
 
-void bc_matvec_avx256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void spmv_avx256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A.bs;
 
     for (int i = 0; i < A.nb * bs; i++) {
@@ -118,7 +118,7 @@ void bc_matvec_avx256(const BlockedCSR &A, const double * __restrict__ x, double
 }
 
 
-void bc_matvec_avx512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void spmv_avx512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A.bs;
 
     for (int i = 0; i < A.nb * bs; i++) {
@@ -161,7 +161,7 @@ void bc_matvec_avx512(const BlockedCSR &A, const double * __restrict__ x, double
     }
 }
 
-void bc_matvec_hwy256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void spmv_hwy256(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     const int bs = A.bs;
 
     const hn::FixedTag<double, 4> d;  // 256-bit fixo: 4 lanes
@@ -201,7 +201,7 @@ void bc_matvec_hwy256(const BlockedCSR &A, const double * __restrict__ x, double
     }
 }
 
-void bc_matvec_hwy512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
+void spmv_hwy512(const BlockedCSR &A, const double * __restrict__ x, double * __restrict__ y) {
     int bs = A.bs;
 
     const hn::FixedTag<double, 8> d;

@@ -11,7 +11,7 @@ SpmvBenchmark::SpmvBenchmark(int ini, int fim, int inc, int K, const std::string
     this->gs_median = std::vector<double>(variants.size(), 0.0);
 }
 
-void SpmvBenchmark::evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv) {
+void SpmvBenchmark::evaluate_spmvs(int nx, int ny, int nz, FILE *runs_csv) {
     int N = nx * ny * nz;
 
     constexpr int TABLE_WIDTH = 92;
@@ -32,7 +32,7 @@ void SpmvBenchmark::evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv) 
         x[i] = (double)i;
     }
 
-    bc_matvec(A, x, y_ref);
+    spmv(A, x, y_ref);
 
     double *sample = (double *)malloc(K * sizeof(double));
 
@@ -135,7 +135,7 @@ int SpmvBenchmark::run() {
     print_separator('#', SUMMARY_WIDTH);
 
     for (int nx = ini; nx <= fim; nx += inc) {
-        evaluate_bc_matvecs(nx, nx, nx, runs_csv);
+        evaluate_spmvs(nx, nx, nx, runs_csv);
     }
 
     fclose(runs_csv);

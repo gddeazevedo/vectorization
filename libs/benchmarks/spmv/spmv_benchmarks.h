@@ -2,11 +2,11 @@
 
 #include <utils.h>
 #include <bcsr.h>
-#include <bc_matvec.h>
+#include <spmv.h>
 
 struct MatvecVariant {
     const std::string name;
-    bc_matvec_func_t func;
+    spmv_func_t func;
 };
 
 class SpmvBenchmark {
@@ -18,15 +18,15 @@ class SpmvBenchmark {
         std::vector<double> gs_median;
         int gs_count = 0;
         const std::vector<MatvecVariant> variants = {
-            {"Base",        bc_matvec},
-            {"OpenMP",      bc_matvec_omp},
-            {"AVX256",      bc_matvec_avx256},
-            {"AVX512",      bc_matvec_avx512},
-            {"Highway256",  bc_matvec_hwy256},
-            {"Highway512",  bc_matvec_hwy512}
+            {"Base",        spmv},
+            {"OpenMP",      spmv_omp},
+            {"AVX256",      spmv_avx256},
+            {"AVX512",      spmv_avx512},
+            {"Highway256",  spmv_hwy256},
+            {"Highway512",  spmv_hwy512}
         };
 
-        void evaluate_bc_matvecs(int nx, int ny, int nz, FILE *runs_csv);
+        void evaluate_spmvs(int nx, int ny, int nz, FILE *runs_csv);
 
     public:
         SpmvBenchmark(int ini, int fim, int inc, int K, const std::string &compiler);

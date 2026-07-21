@@ -5,12 +5,12 @@ add_library(bcsr
 target_include_directories(bcsr PUBLIC bcsr) # where are the headers for bcsr
 
 # Add a library to the project using the specified source files
-# bc_matvec
-add_library(bc_matvec
-    bc_matvec/bc_matvec.cpp
+# spmv
+add_library(spmv
+    spmv/spmv.cpp
 )
-target_include_directories(bc_matvec PUBLIC bc_matvec) # where are the headers for bc_matvec
-target_link_libraries(bc_matvec PUBLIC bcsr) # where are the dependencies for bc_matvec
+target_include_directories(spmv PUBLIC spmv) # where are the headers for spmv
+target_link_libraries(spmv PUBLIC bcsr) # where are the dependencies for spmv
 
 
 add_library(
@@ -24,17 +24,17 @@ add_library(spmv_benchmarks
     benchmarks/spmv/spmv_benchmarks.cpp
 )
 target_include_directories(spmv_benchmarks PUBLIC benchmarks/spmv) # where are the headers for spmv_benchmarks
-target_link_libraries(spmv_benchmarks PUBLIC bcsr bc_matvec utils) # where are the dependencies for spmv_benchmarks
+target_link_libraries(spmv_benchmarks PUBLIC bcsr spmv utils) # where are the dependencies for spmv_benchmarks
 
 
-add_library(helpers
-    helpers/helpers.cpp
+add_library(block_matrix_ops
+    block_matrix_ops/block_matrix_ops.cpp
 )
-target_include_directories(helpers PUBLIC helpers) # where are the headers for helpers
+target_include_directories(block_matrix_ops PUBLIC block_matrix_ops) # where are the headers for helpers
 
 add_library(ilu0 ilu0/ilu0.cpp)
 target_include_directories(ilu0 PUBLIC ilu0) # where are the headers for ilu0
-target_link_libraries(ilu0 PUBLIC bcsr helpers) # where are the dependencies for ilu0
+target_link_libraries(ilu0 PUBLIC bcsr block_matrix_ops) # where are the dependencies for ilu0
 
 # benchmarks/ilu0
 add_library(ilu0_benchmarks
