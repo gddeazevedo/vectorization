@@ -33,7 +33,14 @@ void matmat(double *dst_matrix, const double *A, const double *B) {
 }
 
 void matmat_omp(double *dst_matrix, const double *A, const double *B) {
-
+    for (int i = 0; i < BS; i++) {
+        for (int k = 0; k < BS; k++) {
+            #pragma omp simd simdlen(3)
+            for (int j = 0; j < BS; j++) {
+                dst_matrix[idx(i,j)] += A[idx(i,k)] * B[idx(k,j)];
+            }
+        }
+    }
 }
 
 void matmat_avx256(double *dst_matrix, const double *A, const double *B) {
@@ -52,17 +59,17 @@ void matmat_hwy512(double *dst_matrix, const double *A, const double *B) {
 
 }
 
-
 void matsub(double *dst_matrix, const double *A, const double *B) {
-    for (int i = 0; i < BS; i++) {
-        for (int j = 0; j < BS; j++) {
-            dst_matrix[idx(i,j)] = A[idx(i,j)] - B[idx(i,j)];
-        }
+    for (int i = 0; i < BS * BS; i++) {
+        dst_matrix[i] = A[i] - B[i];
     }
 }
 
 void matsub_omp(double *dst_matrix, const double *A, const double *B) {
-
+    #pragma omp simd
+    for (int i = 0; i < BS * BS; i++) {
+        dst_matrix[i] = A[i] - B[i];
+    }
 }
 
 void matsub_avx256(double *dst_matrix, const double *A, const double *B) {

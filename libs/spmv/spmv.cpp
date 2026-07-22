@@ -43,7 +43,7 @@ void spmv_omp(const BlockedCSR &A, const double * __restrict__ x, double * __res
         double y1 = 0.0;
         double y2 = 0.0;
 
-        #pragma omp simd reduction(+:y0,y1,y2) simdlen(3)
+        #pragma omp simd reduction(+:y0,y1,y2)
         for (int block_idx = row_start; block_idx < row_end; block_idx++) {
             int block_col = A.ja[block_idx];
 
