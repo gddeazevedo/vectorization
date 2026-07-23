@@ -15,10 +15,10 @@ class Ilu0Benchmark : public BenchmarkBase {
         const std::vector<Ilu0Variant> variants = {
             {"Base",        ilu0_decomposition},
             {"OpenMP",      ilu0_decomposition_omp},
-            // {"AVX256",      ilu0_decomposition_avx256},
-            // {"AVX512",      ilu0_decomposition_avx512},
-            // {"Highway256",  ilu0_decomposition_hwy256},
-            // {"Highway512",  ilu0_decomposition_hwy512}
+            {"AVX256",      ilu0_decomposition_avx256},
+            {"AVX512",      ilu0_decomposition_avx512},
+            {"Highway256",  ilu0_decomposition_hwy256},
+            {"Highway512",  ilu0_decomposition_hwy512}
         };
 
         void evaluate(int nx, int ny, int nz, FILE *runs_csv) override;

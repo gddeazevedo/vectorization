@@ -6,11 +6,16 @@
 
 namespace hn = hwy::HWY_NAMESPACE;
 
-
 #define BS 3
 #define idx(i,j) ((i)*BS + (j))
 
+static void invert_common(double *dst_matrix, const double *M, int *det);
 void invert_3x3_matrix(double *dst_matrix, const double *M);
+void invert_3x3_matrix_omp(double *dst_matrix, const double *M);
+void invert_3x3_matrix_avx256(double *dst_matrix, const double *M);
+void invert_3x3_matrix_avx512(double *dst_matrix, const double *M);
+void invert_3x3_matrix_hwy256(double *dst_matrix, const double *M);
+void invert_3x3_matrix_hwy512(double *dst_matrix, const double *M);
 
 void matmat(double *dst_matrix, const double *A, const double *B);
 void matmat_omp(double *dst_matrix, const double *A, const double *B);
