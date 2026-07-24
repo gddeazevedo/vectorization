@@ -172,39 +172,39 @@ void matsub_omp(double *dst_matrix, const double *A, const double *B) {
 }
 
 void matsub_avx256(double *dst_matrix, const double *A, const double *B) {
-    __m256d va    = _mm256_loadu_pd(&A[0]);
-    __m256d vb    = _mm256_loadu_pd(&B[0]);
-    __m256d vdiff = _mm256_sub_pd(va, vb);
-    _mm256_storeu_pd(&dst_matrix[0], vdiff);    
+    __m256d va   = _mm256_loadu_pd(&A[0]);
+    __m256d vb   = _mm256_loadu_pd(&B[0]);
+    __m256d vdst = _mm256_sub_pd(va, vb);
+    _mm256_storeu_pd(&dst_matrix[0], vdst);    
     
-    va    = _mm256_loadu_pd(&A[4]);
-    vb    = _mm256_loadu_pd(&B[4]);
-    vdiff = _mm256_sub_pd(va, vb);
-    _mm256_storeu_pd(&dst_matrix[4], vdiff);    
+    va   = _mm256_loadu_pd(&A[4]);
+    vb   = _mm256_loadu_pd(&B[4]);
+    vdst = _mm256_sub_pd(va, vb);
+    _mm256_storeu_pd(&dst_matrix[4], vdst);    
 
     dst_matrix[8] = A[8] - B[8];
 }
 
 void matsub_avx512(double *dst_matrix, const double *A, const double *B) {   
-    __m512d va    = _mm512_loadu_pd(A);
-    __m512d vb    = _mm512_loadu_pd(B);
-    __m512d vdiff = _mm512_sub_pd(va, vb);
-    _mm512_storeu_pd(dst_matrix, vdiff);
+    __m512d va   = _mm512_loadu_pd(A);
+    __m512d vb   = _mm512_loadu_pd(B);
+    __m512d vdst = _mm512_sub_pd(va, vb);
+    _mm512_storeu_pd(dst_matrix, vdst);
     dst_matrix[8] = A[8] - B[8];    
 }
 
 void matsub_hwy256(double *dst_matrix, const double *A, const double *B) {
     const hn::FixedTag<double, 4> d;
 
-    auto va    = hn::LoadU(d, A);
-    auto vb    = hn::LoadU(d, B);
-    auto vdiff = hn::Sub(va, vb);
-    hn::StoreU(vdiff, d, dst_matrix);
+    auto va   = hn::LoadU(d, A);
+    auto vb   = hn::LoadU(d, B);
+    auto vdst = hn::Sub(va, vb);
+    hn::StoreU(vdst, d, dst_matrix);
 
     va = hn::LoadU(d, A + 4);
     vb = hn::LoadU(d, B + 4);
-    vdiff = hn::Sub(va, vb);
-    hn::StoreU(vdiff, d, dst_matrix + 4);
+    vdst = hn::Sub(va, vb);
+    hn::StoreU(vdst, d, dst_matrix + 4);
 
     dst_matrix[8] = A[8] - B[8];
 }
@@ -212,10 +212,10 @@ void matsub_hwy256(double *dst_matrix, const double *A, const double *B) {
 void matsub_hwy512(double *dst_matrix, const double *A, const double *B) {
     const hn::FixedTag<double, 8> d;
 
-    auto va    = hn::LoadU(d, A);
-    auto vb    = hn::LoadU(d, B);
-    auto vdiff = hn::Sub(va, vb);
-    hn::StoreU(vdiff, d, dst_matrix);
+    auto va   = hn::LoadU(d, A);
+    auto vb   = hn::LoadU(d, B);
+    auto vdst = hn::Sub(va, vb);
+    hn::StoreU(vdst, d, dst_matrix);
 
     dst_matrix[8] = A[8] - B[8];
 }
